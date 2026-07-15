@@ -27,9 +27,9 @@ CXXFLAGS += -std=c++17 -Wall -O2
 LDFLAGS +=
 
 
-SRC_DIR = methods\methods_list
+SRC_DIR = methods_list
 BUILD_DIR = build
-PLUGIN_DIR = methods\methods_comp
+PLUGIN_DIR = methods_comp
 
 
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
