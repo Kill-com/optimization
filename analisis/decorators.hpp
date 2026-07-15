@@ -5,6 +5,11 @@
 #include <chrono>
 #include "../exect/execution.hpp"
 
+class CycleCounter {
+public:
+    static uint64_t rdtsc();
+};
+
 //Шаблон декоратора
 template<typename Derived>
 class DecoratorChain {
@@ -33,7 +38,7 @@ class ANALIS_F_LINUX : public DecoratorChain<ANALIS_F_LINUX<Next>>{
     private:
     Next next;
     public:
-    ANALIS_F_LINUX(Next) m:next(m){};
+    ANALIS_F_LINUX(Next m):next(m){};
     template<typename... Args>
     void call(Args&&... args);
 };
