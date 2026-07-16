@@ -7,14 +7,15 @@
 
 class METHOD_L{
     protected:
-    int count;
-    std::vector<std::string_view> methods;
+    std::string_view methods;
+    std::string_view functions;
     public:
-    METHOD_L(int c=0, std::vector<std::string_view> m):count(c),methods(m){};
-    virtual void exect(std::string_view method, std::string_view function)=0;
+    METHOD_L(std::string_view m="", std::string_view f=""):methods(m), functions(f){};
+    virtual void exect()=0;
     virtual ~METHOD_L() = default;
 };
 class EXECUTER: protected METHOD_L{
     public:
-    void exect(std::string_view method, std::string_view function);
+    EXECUTER(std::string_view m="", std::string_view f=""):METHOD_L(m,f){};
+    void exect();
 };
