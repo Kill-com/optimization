@@ -50,7 +50,7 @@ class EXECTED : protected METHOD_L{
     METHOD_L* ex;
     public:
     EXECTED(METHOD_L* m): ex(m){};
-    void exect(std::string_view method, std::string_view function);
+    void exect();
 };
 
 template<typename Next>

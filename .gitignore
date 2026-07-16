@@ -1,7 +1,7 @@
 main_.cc
 a.exe
 t.json
-build/
 methods_comp/
 function_comp/
+lib.a
 -p

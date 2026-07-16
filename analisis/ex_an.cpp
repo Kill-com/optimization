@@ -2,7 +2,7 @@
 
 
 //вызов метода
-void EXECTED::exect(std::string_view method, std::string_view function){
+void EXECTED::exect(){
     //проверка на линук
         
     //инициализация декораторов

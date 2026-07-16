@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(MyProject)
+project(optimization)
 
 # Устанавливаем стандарт C++
 set(CMAKE_CXX_STANDARD 17)
@@ -32,3 +32,10 @@ add_custom_target(build_function_tools
 
 # Делаем так, чтобы эти цели собирались вместе с основным проектом
 add_dependencies(${PROJECT_NAME} build_external_tools build_function_tools)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        $<TARGET_FILE:${PROJECT_NAME}>
+        ${CMAKE_SOURCE_DIR}/
+    COMMENT "Копирование ${PROJECT_NAME}.exe в главную папку"
+)

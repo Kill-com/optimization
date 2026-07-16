@@ -1,0 +1,5 @@
+C:/Users/911/Desktop/progect/optimization/build/CMakeFiles/optimization.dir
+C:/Users/911/Desktop/progect/optimization/build/CMakeFiles/build_external_tools.dir
+C:/Users/911/Desktop/progect/optimization/build/CMakeFiles/build_function_tools.dir
+C:/Users/911/Desktop/progect/optimization/build/CMakeFiles/edit_cache.dir
+C:/Users/911/Desktop/progect/optimization/build/CMakeFiles/rebuild_cache.dir
