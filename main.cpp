@@ -4,20 +4,63 @@
 #include "supported/parser/parser_flags.hpp"
 
 #include "exect/execution.hpp"
-#include "analisis/decorators.hpp"
-
+#include "decorators/decorators.hpp"
 
 namespace fs = std::filesystem;
-
 //checking the file extension
 bool hasExtension(const std::string_view& filename, const std::string& ext) {
     fs::path path(filename);
     return path.extension() == ext;
 }
+
+template<typename classes>
+void exect_(Parser& parser, int m=2, std::string_view do_to="", classes A=classes()) {
+        bool need_retry = false;
+        std::vector<std::string_view> failed_args;
+        
+        // Цикл по аргументам
+        for (size_t i = 0; i < parser.getKeyCount(m); i++) {
+            std::string_view function = parser.getKeyArg(i, m);
+            
+            // УСЛОВИЕ: если нет расширения .dll
+            if (!hasExtension(function, ".dll")) {
+                failed_args.push_back(function);
+                need_retry = true;
+            }else{
+                if(m==2){
+                    A=classes(function);
+                    exect_(parser, 1, function,A);
+                }else{
+                    A.exect(function);
+                }
+            }
+        }
+        // УСЛОВИЕ ДЛЯ РЕКУРСИВНОГО ВЫЗОВА
+        if (need_retry) {   
+            // Создаём новый парсер с исправленными аргументами
+            Parser_file new_parser;
+            std::tuple<std::vector<std::string_view>> args ={failed_args};
+            new_parser.parse(args);
+            //  ВЫЗЫВАЕМ СЕБЯ С НОВЫМ ПАРСЕРОМ
+            exect_(new_parser,m,do_to, A);
+        }
+}
+
+void exect(Parser_terminal& parser){
+    if(parser.getflag()){
+        //обычный вызов
+        exect_(parser,2,"",METHOD_L());
+    }else{
+        //вызов с анализлом
+        exect_(parser,2,"",EXECTED());
+    }
+}
+
+
 int main(int argc, char* argv[]) {
-    Parser parser;
-    
-    if (!parser.parse(argc, argv)) {
+    Parser_terminal parser;
+    std::tuple<int, char**> args = {argc, argv};
+    if (!parser.parse(args)) {
         std::cerr << "Use the -f or -function key to enter --function files"
          <<"or a json file with file addresses."
          <<'\n'
@@ -30,33 +73,6 @@ int main(int argc, char* argv[]) {
          << std::endl;
         return 1;
     }
-    
-    // Fast access
-    std::string_view function;
-    for (size_t i = 0; i < parser.getKey1Count(); i++) {
-        function=parser.getKey1Arg(i);
-        if(hasExtension(function,".json")){
-            //tomorrow
-        }
-        std::cout << "  " << parser.getKey1Arg(i) << std::endl;
-    }
-    std::string_view method;
-    for (size_t i = 0; i < parser.getKey2Count(); i++) {
-        method=parser.getKey2Arg(i);
-        if(hasExtension(method,".json")){
-            //tomorrow
-        }
-        std::cout << "  " << parser.getKey2Arg(i) << std::endl;
-    }
-    
-    if(parser.getflag()){
-        //тут будет цикл а пока...
-        EXECUTER A(method, function);
-        A.exect();
-    }else{
-
-    }
-
-
+    exect(parser);
     return 0;
 }

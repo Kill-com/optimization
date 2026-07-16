@@ -2,13 +2,11 @@
 #ifndef DECORATOR_HPP
 #define DECORATOR_HPP
 
-#include <chrono>
-#include "../exect/execution.hpp"
 
-class CycleCounter {
-public:
-    static uint64_t rdtsc();
-};
+#include "../exect/execution.hpp"
+#include "../analisis/c_analisis.hpp"
+
+
 
 //Шаблон декоратора
 template<typename Derived>
@@ -47,10 +45,9 @@ class ANALIS_F_LINUX : public DecoratorChain<ANALIS_F_LINUX<Next>>{
 //класс вызова анализируемой функции
 class EXECTED : protected METHOD_L{
     private:
-    METHOD_L* ex;
     public:
-    EXECTED(METHOD_L* m): ex(m){};
-    void exect();
+    EXECTED(std::string_view m=""): METHOD_L(m){};
+    void exect(std::string_view);
 };
 
 template<typename Next>

@@ -1,8 +1,8 @@
-#include "decorators.hpp"
+#include "../decorators/decorators.hpp"
 
 
 //вызов метода
-void EXECTED::exect(){
+void EXECTED::exect(std::string_view){
     //проверка на линук
         
     //инициализация декораторов

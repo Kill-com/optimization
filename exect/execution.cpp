@@ -5,9 +5,9 @@
 #include "execution.hpp"
 #include "../supported/assembler/assembling_methods.hpp"
 
-void EXECUTER::exect(){
+void METHOD_L::exect(std::string_view functions){
     auto method = PluginLoader::loadLibrary(this->methods);
-    auto function = PluginLoader::loadLibrary(this->functions);
+    auto function = PluginLoader::loadLibrary(functions);
     if (!method && !function) {
         std::cerr << "Failed to load plugin!" << std::endl;
     }else{
