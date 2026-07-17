@@ -9,5 +9,6 @@ class METHOD_L{
     public:
     METHOD_L(std::string m=""):methods(m){};
     virtual void exect(std::string);
+    void operator()(std::string f){exect(f);};
     virtual ~METHOD_L() = default;
 };

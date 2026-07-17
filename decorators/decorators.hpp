@@ -1,12 +1,10 @@
 
 #ifndef DECORATOR_HPP
 #define DECORATOR_HPP
-
+#include <iostream>
 
 #include "../exect/execution.hpp"
-#include "../analisis/c_analisis.hpp"
-
-
+#include "analisis/c_analisis.hpp"
 
 //Шаблон декоратора
 template<typename Derived>
@@ -42,12 +40,51 @@ class ANALIS_F_LINUX : public DecoratorChain<ANALIS_F_LINUX<Next>>{
 };
 
 
+// ============================================
+// ОПРЕДЕЛЕНИЕ ОПЕРАЦИОННОЙ СИСТЕМЫ
+// ============================================
+#ifdef _WIN32
+    #define IS_WINDOWS 1
+    #define IS_LINUX 0
+    #define PLATFORM_NAME "Windows"
+#elif __linux__
+    #define IS_WINDOWS 0
+    #define IS_LINUX 1
+    #define PLATFORM_NAME "Linux"
+#else
+    #define IS_WINDOWS 0
+    #define IS_LINUX 0
+    #define PLATFORM_NAME "Unknown"
+#endif
+
 //класс вызова анализируемой функции
 class EXECTED : protected METHOD_L{
     private:
+    #if IS_LINUX
+        // На Linux: Таймер + Логгер + Linux-специфичный
+        using DecoratorType = ANALIS<ANALIS_F_LINUX<METHOD_L>>;
+    #else
+        // На Windows: Таймер + Логгер (без Linux-специфичного)
+        using DecoratorType = ANALIS<METHOD_L>;
+    #endif
+    
+    DecoratorType decorated_func;
     public:
-    EXECTED(std::string m=""): METHOD_L(m){};
-    void exect(std::string);
+    EXECTED(std::string m = "") 
+        : METHOD_L(m)  // Инициализация базового класса
+        #if IS_LINUX
+            , decorated_func(
+                ANALIS<ANALIS_F_LINUX<METHOD_L>>(
+                    ANALIS_F_LINUX<METHOD_L>(METHOD_L(m))
+                )
+            )
+        #else
+            , decorated_func(
+                ANALIS<METHOD_L>(METHOD_L(m))
+            )
+        #endif
+        {};
+    void exect(std::string f){decorated_func(f);};
 };
 
 template<typename Next>
@@ -66,7 +103,7 @@ void ANALIS<Next>::call(Args&&... args) {
     auto end = CycleCounter::rdtsc();
     auto cycles = end - start;
     std::cout<<"end of analisis"<<std::endl;
-
+    std::cout<<cycles<<std::endl;
 
 
     std::cout<<"save results in created file"<<std::endl;

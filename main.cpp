@@ -55,7 +55,6 @@ void exect(Parser_terminal& parser){
     }
 }
 
-
 int main(int argc, char* argv[]) {
 
     Parser_terminal parser;

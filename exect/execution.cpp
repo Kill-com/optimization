@@ -18,7 +18,7 @@ void METHOD_L::exect(std::string functions){
           if (!process && !process_f) {
             std::cerr << "Function 'f' not found!" << std::endl;
             }else{
-                std::cout<<process(process_f,1,2)<<std::endl;
+                // std::cout<<process(process_f,1,2)<<std::endl;
             }
     }
 }
