@@ -1,6 +1,6 @@
 #include <chrono>
 
-#include "c_analisis.h"
+#include "c_analisis.hpp"
 
 //получение тактов процессора
 uint64_t CycleCounter::rdtsc() {
