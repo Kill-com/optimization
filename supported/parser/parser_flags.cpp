@@ -4,7 +4,7 @@ namespace fs = std::filesystem;
 
 #include "parser_flags.hpp"
 
-bool Parser_terminal::parse(const std::tuple<int, char**>& args) {
+std::optional<bool> Parser_terminal::parse(const std::tuple<int, char**>& args) {
     auto [argc, argv] =args;
     // Pre-allocate memory to avoid reallocations
     size_t estimated_args = (argc - 1) / 2;
@@ -17,7 +17,7 @@ bool Parser_terminal::parse(const std::tuple<int, char**>& args) {
     KeyType currentKey = NONE;
     
     for (int i = 1; i < argc; i++) {
-        std::string_view arg(argv[i]);
+        std::string arg(argv[i]);
         
         if (arg == "-f" || arg == "--function") {
             currentKey = KEY1;
@@ -41,17 +41,24 @@ bool Parser_terminal::parse(const std::tuple<int, char**>& args) {
     
     return (has_key1 && !key1_args.empty());
 }
-void Parser_file::parse(const std::tuple<std::vector<std::string_view>>& args){
-    auto [arg] =args;
-    for (const std::string_view& fl : arg) {
+std::optional<bool> Parser_file::parse(const std::tuple<int, std::vector<std::string>>& args){
+    auto [m, arg] =args;
+    for (const std::string& fl : arg) {
         std::string filename=fl.data();
         if (!fs::exists(filename) && !fs::is_directory(filename)) {
             std::cout << "Это папка не существует или не могу открыть!" << std::endl;
         }else{
             for (const auto& entry : fs::directory_iterator(filename)) {
-            count++;
-            strings.push_back(entry.path().filename().string());
+                if(m==1){
+                    key1_args.push_back(filename+entry.path().filename().string());
+                    key1_size++;
+                }else if(m==2){
+                    key2_args.push_back(filename+entry.path().filename().string());
+                    key2_size++;
+
+                }
             }
         }
     }
+    return false;
 }

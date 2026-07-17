@@ -1,14 +1,13 @@
 #pragma once
 
 #include <iostream>
-#include <string_view>
 //запуск методов на решение целевой функции
 
 class METHOD_L{
     protected:
-    std::string_view methods;
+    std::string methods;
     public:
-    METHOD_L(std::string_view m=""):methods(m){};
-    virtual void exect(std::string_view);
+    METHOD_L(std::string m=""):methods(m){};
+    virtual void exect(std::string);
     virtual ~METHOD_L() = default;
 };

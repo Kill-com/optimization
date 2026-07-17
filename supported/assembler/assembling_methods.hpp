@@ -1,4 +1,3 @@
-#include <string_view>
 #include <iostream>
 #include <functional>
 #include <memory>
@@ -32,9 +31,7 @@ using LibraryPtr = std::unique_ptr<std::remove_pointer<DL_HANDLE>::type, Library
 class PluginLoader {
 public:
     // Загружает библиотеку по имени (хранится в string_view)
-    static LibraryPtr loadLibrary(std::string_view libraryName) {
-        // string_view -> null-terminated string
-        std::string name(libraryName);
+    static LibraryPtr loadLibrary(std::string name) {
         
         DL_HANDLE handle = DL_LOAD(name.c_str());
         if (!handle) {
@@ -47,8 +44,7 @@ public:
 
     // Получает функцию из загруженной библиотеки
     template<typename FuncType>
-    static FuncType* getFunction(DL_HANDLE handle, std::string_view funcName) {
-        std::string name(funcName);
+    static FuncType* getFunction(DL_HANDLE handle, std::string name) {
         auto* func = reinterpret_cast<FuncType*>(DL_SYM(handle, name.c_str()));
         if (!func) {
             std::cerr << "Function not found: " << name << std::endl;

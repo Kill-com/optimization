@@ -5,7 +5,7 @@
 #include "execution.hpp"
 #include "../supported/assembler/assembling_methods.hpp"
 
-void METHOD_L::exect(std::string_view functions){
+void METHOD_L::exect(std::string functions){
     auto method = PluginLoader::loadLibrary(this->methods);
     auto function = PluginLoader::loadLibrary(functions);
     if (!method && !function) {

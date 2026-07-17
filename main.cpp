@@ -7,30 +7,28 @@
 #include "decorators/decorators.hpp"
 
 namespace fs = std::filesystem;
-//checking the file extension
-bool hasExtension(const std::string_view& filename, const std::string& ext) {
-    fs::path path(filename);
-    return path.extension() == ext;
-}
 
 template<typename classes>
-void exect_(Parser& parser, int m=2, std::string_view do_to="", classes A=classes()) {
+void exect_(Parser_terminal& parser, int m=2, classes A=classes()) {
         bool need_retry = false;
-        std::vector<std::string_view> failed_args;
-        
+        std::vector<std::string> failed_args;
         // Цикл по аргументам
         for (size_t i = 0; i < parser.getKeyCount(m); i++) {
-            std::string_view function = parser.getKeyArg(i, m);
-            
+            std::string function = parser.getKeyArg(i, m);
             // УСЛОВИЕ: если нет расширения .dll
-            if (!hasExtension(function, ".dll")) {
+            if (fs::is_directory(function)) {
                 failed_args.push_back(function);
+                parser.del_el(m,i);
+                i--;
                 need_retry = true;
             }else{
                 if(m==2){
-                    A=classes(function);
-                    exect_(parser, 1, function,A);
+                    classes A(function);
+                    std::cout<<"Обработка. Метод: "<<function;
+                    Parser_terminal p(parser);
+                    exect_(p, 1,A);
                 }else{
+                    std::cout<<" Функция: "<<function<<std::endl;
                     A.exect(function);
                 }
             }
@@ -38,26 +36,28 @@ void exect_(Parser& parser, int m=2, std::string_view do_to="", classes A=classe
         // УСЛОВИЕ ДЛЯ РЕКУРСИВНОГО ВЫЗОВА
         if (need_retry) {   
             // Создаём новый парсер с исправленными аргументами
-            Parser_file new_parser;
-            std::tuple<std::vector<std::string_view>> args ={failed_args};
+            Parser_file new_parser(parser);
+            
+            std::tuple<int,std::vector<std::string>> args ={m, failed_args};
             new_parser.parse(args);
             //  ВЫЗЫВАЕМ СЕБЯ С НОВЫМ ПАРСЕРОМ
-            exect_(new_parser,m,do_to, A);
+            exect_(new_parser,m, A);
         }
 }
 
 void exect(Parser_terminal& parser){
     if(parser.getflag()){
         //обычный вызов
-        exect_(parser,2,"",METHOD_L());
+        exect_(parser,2,METHOD_L());
     }else{
         //вызов с анализлом
-        exect_(parser,2,"",EXECTED());
+        exect_(parser,2,EXECTED());
     }
 }
 
 
 int main(int argc, char* argv[]) {
+
     Parser_terminal parser;
     std::tuple<int, char**> args = {argc, argv};
     if (!parser.parse(args)) {

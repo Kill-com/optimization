@@ -46,8 +46,8 @@ class ANALIS_F_LINUX : public DecoratorChain<ANALIS_F_LINUX<Next>>{
 class EXECTED : protected METHOD_L{
     private:
     public:
-    EXECTED(std::string_view m=""): METHOD_L(m){};
-    void exect(std::string_view);
+    EXECTED(std::string m=""): METHOD_L(m){};
+    void exect(std::string);
 };
 
 template<typename Next>
