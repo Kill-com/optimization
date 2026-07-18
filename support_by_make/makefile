@@ -26,11 +26,9 @@ CXX = c++
 CXXFLAGS += -std=c++17 -Wall -O2
 LDFLAGS +=
 
-
-SRC_DIR = methods_list
+SRC_DIR ?= 
 BUILD_DIR = build
-PLUGIN_DIR = methods_comp
-
+PLUGIN_DIR ?=
 
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 

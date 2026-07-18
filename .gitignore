@@ -2,9 +2,11 @@ main_.cc
 a.exe
 t.json
 lib.a
--p
+optimization.exe
+run.bat
 
 # папки
 methods_comp/
 function_comp/
 build/
+-p

@@ -4,7 +4,7 @@
 #include "supported/parser/parser_flags.hpp"
 
 #include "exect/execution.hpp"
-#include "decorators/decorators.hpp"
+#include "analisis/Analisis.hpp"
 
 namespace fs = std::filesystem;
 
@@ -29,7 +29,7 @@ void exect_(Parser_terminal& parser, int m=2, classes A=classes()) {
                     exect_(p, 1,A);
                 }else{
                     std::cout<<" Функция: "<<function<<std::endl;
-                    A.exect(function);
+                    A(function, 1,2);
                 }
             }
         }
@@ -54,7 +54,6 @@ void exect(Parser_terminal& parser){
         exect_(parser,2,EXECTED());
     }
 }
-
 
 int main(int argc, char* argv[]) {
 
