@@ -31,19 +31,20 @@ BUILD_DIR = build
 PLUGIN_DIR ?=
 
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
+
+# SOURCES = $(shell find $(SRC_DIR) -name '*.cpp')
+
+
 PLUGINS = $(patsubst $(SRC_DIR)/%.cpp,%,$(SOURCES))
+
+
 TARGETS = $(addprefix $(PLUGIN_DIR)/, $(addsuffix $(EXT), $(PLUGINS)))
 
-# Для Python скрипта
-PYTHON = python
-PYTHON_SCRIPT = return_signature.py
-FUNC_NAME ?=
-SAVE_SIGNATURE ?=
 
-.PHONY: all clean info run-python
 
-# ИЗМЕНЕНО: Добавлен run-python как зависимость
-all: $(PLUGIN_DIR) $(TARGETS) run-python
+.PHONY: all clean info
+
+all: $(PLUGIN_DIR) $(TARGETS)
 
 $(PLUGIN_DIR):
 	@mkdir -p $(PLUGIN_DIR)
@@ -54,8 +55,6 @@ $(BUILD_DIR):
 $(PLUGIN_DIR)/%$(EXT): $(SRC_DIR)/%.cpp | $(PLUGIN_DIR)
 	$(CXX) $(CXXFLAGS) $< -o $@ $(LDFLAGS)
 
-run-python:
-	$(PYTHON) $(PYTHON_SCRIPT) $(SRC_DIR) $(FUNC_NAME) $(SAVE_SIGNATURE)
 
 clean:
 	rm -rf $(PLUGIN_DIR)/*$(EXT)

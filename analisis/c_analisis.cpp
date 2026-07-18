@@ -1,3 +1,4 @@
+#include <iostream>
 #include <chrono>
 
 #include "c_analisis.hpp"
@@ -12,3 +13,4 @@ uint64_t CycleCounter::rdtsc() {
         return 0;
         #endif
 }
+

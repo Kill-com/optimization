@@ -22,13 +22,9 @@ add_custom_target(build_tools
     COMMAND ${CMAKE_MAKE_PROGRAM} -f Makefile 
     SRC_DIR=../target_function/f_list 
     PLUGIN_DIR=../target_function/compiled/f_comp 
-    FUNC_NAME=target_f
-    SAVE_SIGNATURE=../target_function/compiled
     COMMAND ${CMAKE_MAKE_PROGRAM} -f Makefile 
     SRC_DIR=../methods/methods_list 
     PLUGIN_DIR=../methods/compiled/methods_comp 
-    FUNC_NAME=f
-    SAVE_SIGNATURE=../methods/compiled
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/support_by_make 
     COMMENT "Сборка external_tools с помощью Makefile"
     VERBATIM
