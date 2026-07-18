@@ -11,27 +11,30 @@ list(FILTER SOURCES EXCLUDE REGEX ".*/build/.*")
 list(FILTER SOURCES EXCLUDE REGEX ".*CMakeCXXCompilerId.*")
 list(FILTER SOURCES EXCLUDE REGEX ".*/methods/.*")
 list(FILTER SOURCES EXCLUDE REGEX ".*/target_function/.*")
+list(FILTER SOURCES EXCLUDE REGEX ".*/support_by_make/.*")
 
 list(APPEND SOURCES ${ADDITIONAL_SOURCES})
 
 # Создаем исполняемый файл
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-add_custom_target(build_external_tools
-    COMMAND ${CMAKE_MAKE_PROGRAM} -f Makefile
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/methods
+add_custom_target(build_tools
+    COMMAND ${CMAKE_MAKE_PROGRAM} -f Makefile 
+    SRC_DIR=../target_function/f_list 
+    PLUGIN_DIR=../target_function/compiled/f_comp 
+    FUNC_NAME=target_f
+    SAVE_SIGNATURE=../target_function/compiled
+    COMMAND ${CMAKE_MAKE_PROGRAM} -f Makefile 
+    SRC_DIR=../methods/methods_list 
+    PLUGIN_DIR=../methods/compiled/methods_comp 
+    FUNC_NAME=f
+    SAVE_SIGNATURE=../methods/compiled
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/support_by_make 
     COMMENT "Сборка external_tools с помощью Makefile"
     VERBATIM
 )
-add_custom_target(build_function_tools
-    COMMAND ${CMAKE_MAKE_PROGRAM} -f Makefile
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/target_function
-    COMMENT "Сборка external_tools с помощью Makefile"
-    VERBATIM
-)
-
 # Делаем так, чтобы эти цели собирались вместе с основным проектом
-add_dependencies(${PROJECT_NAME} build_external_tools build_function_tools)
+add_dependencies(${PROJECT_NAME} build_tools)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy

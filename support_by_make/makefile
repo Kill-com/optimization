@@ -26,27 +26,24 @@ CXX = c++
 CXXFLAGS += -std=c++17 -Wall -O2
 LDFLAGS +=
 
-
-SRC_DIR = methods_list
+SRC_DIR ?= 
 BUILD_DIR = build
-PLUGIN_DIR = methods_comp
-
+PLUGIN_DIR ?=
 
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
-
-# SOURCES = $(shell find $(SRC_DIR) -name '*.cpp')
-
-
 PLUGINS = $(patsubst $(SRC_DIR)/%.cpp,%,$(SOURCES))
-
-
 TARGETS = $(addprefix $(PLUGIN_DIR)/, $(addsuffix $(EXT), $(PLUGINS)))
 
+# Для Python скрипта
+PYTHON = python
+PYTHON_SCRIPT = return_signature.py
+FUNC_NAME ?=
+SAVE_SIGNATURE ?=
 
+.PHONY: all clean info run-python
 
-.PHONY: all clean info
-
-all: $(PLUGIN_DIR) $(TARGETS)
+# ИЗМЕНЕНО: Добавлен run-python как зависимость
+all: $(PLUGIN_DIR) $(TARGETS) run-python
 
 $(PLUGIN_DIR):
 	@mkdir -p $(PLUGIN_DIR)
@@ -57,6 +54,8 @@ $(BUILD_DIR):
 $(PLUGIN_DIR)/%$(EXT): $(SRC_DIR)/%.cpp | $(PLUGIN_DIR)
 	$(CXX) $(CXXFLAGS) $< -o $@ $(LDFLAGS)
 
+run-python:
+	$(PYTHON) $(PYTHON_SCRIPT) $(SRC_DIR) $(FUNC_NAME) $(SAVE_SIGNATURE)
 
 clean:
 	rm -rf $(PLUGIN_DIR)/*$(EXT)
