@@ -62,8 +62,8 @@ class EXECTED : protected METHOD_L{
                 this->analis_linux(process, process_f, std::forward<decltype(wrapped_args)>(wrapped_args)...);
             #else
                 this->analis(process, process_f, std::forward<decltype(wrapped_args)>(wrapped_args)...);
-            };
             #endif
+            };
         collect(exect_wrapper,f,std::forward<Args>(args)...);
     };
 };

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <functional>
 #include <memory>
+#include <fstream>
+#include <string>
 
 // ====== Кроссплатформенная загрузка ======
 #ifdef _WIN32
@@ -10,6 +12,7 @@
     #define DL_SYM(handle, name) GetProcAddress(handle, name)
     #define DL_CLOSE(handle) FreeLibrary(handle)
     #define DL_ERROR() GetLastError()
+    #define PLUGIN_EXT ".dll"
 #else
     #include <dlfcn.h>
     #define DL_HANDLE void*
@@ -17,9 +20,10 @@
     #define DL_SYM(handle, name) dlsym(handle, name)
     #define DL_CLOSE(handle) dlclose(handle)
     #define DL_ERROR() dlerror()
+    #define PLUGIN_EXT ".so"
 #endif
 
-// ====== Умный указатель для автоматического закрытия ======
+// ====== Умный указатель ======
 struct LibraryDeleter {
     void operator()(DL_HANDLE handle) const {
         if (handle) DL_CLOSE(handle);
@@ -27,24 +31,44 @@ struct LibraryDeleter {
 };
 using LibraryPtr = std::unique_ptr<std::remove_pointer<DL_HANDLE>::type, LibraryDeleter>;
 
-// ====== Основной класс для работы с плагинами ======
+// ====== PluginLoader ======
 class PluginLoader {
 public:
-    // Загружает библиотеку по имени (хранится в string_view)
-    static LibraryPtr loadLibrary(std::string name) {
+    static LibraryPtr loadLibrary(const std::string& name) {
+        std::string lib_name = name;
         
-        DL_HANDLE handle = DL_LOAD(name.c_str());
+        // Добавляем расширение если его нет
+        if (lib_name.find(PLUGIN_EXT) == std::string::npos) {
+            lib_name += PLUGIN_EXT;
+        }
+        
+        // Проверяем существование файла
+        std::ifstream file(lib_name);
+        if (!file.good()) {
+            std::cerr << "File not found: " << lib_name << std::endl;
+            return nullptr;
+        }
+        file.close();
+        
+        // Загружаем библиотеку
+        DL_HANDLE handle = DL_LOAD(lib_name.c_str());
         if (!handle) {
-            std::cerr << "Failed to load library: " << name 
+            std::cerr << "Failed to load library: " << lib_name 
                       << " Error: " << DL_ERROR() << std::endl;
             return nullptr;
         }
+        
+        std::cout << "Loaded: " << lib_name << std::endl;
         return LibraryPtr(handle);
     }
 
-    // Получает функцию из загруженной библиотеки
     template<typename FuncType>
-    static FuncType* getFunction(DL_HANDLE handle, std::string name) {
+    static FuncType* getFunction(DL_HANDLE handle, const std::string& name) {
+        if (!handle) {
+            std::cerr << "Invalid handle" << std::endl;
+            return nullptr;
+        }
+        
         auto* func = reinterpret_cast<FuncType*>(DL_SYM(handle, name.c_str()));
         if (!func) {
             std::cerr << "Function not found: " << name << std::endl;

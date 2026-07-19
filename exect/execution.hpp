@@ -12,7 +12,7 @@ class METHOD_L{
     METHOD_L(std::string m=""):methods(m){};
 
     template<typename Func,typename... Args>
-    void collect(Func func, std::string functions, Args&&... args){
+    void collect(Func func, const std::string functions, Args&&... args){
         auto method = PluginLoader::loadLibrary(this->methods);
         auto function = PluginLoader::loadLibrary(functions);
         if (!method || !function) {
@@ -31,7 +31,7 @@ class METHOD_L{
     }
 
     template<typename... Args>
-    void operator()(std::string functions,Args&&... args){
+    void operator()(const std::string& functions,Args&&... args){
         auto exect_wrapper = [this](auto process, auto process_f, auto&&... wrapped_args) {
             this->exect(process, process_f, std::forward<decltype(wrapped_args)>(wrapped_args)...);
         };

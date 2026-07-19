@@ -2,11 +2,11 @@
 #include <filesystem>
 
 #include "supported/parser/parser_flags.hpp"
+namespace fs = std::filesystem;
 
 #include "exect/execution.hpp"
 #include "analisis/Analisis.hpp"
 
-namespace fs = std::filesystem;
 
 template<typename classes>
 void exect_(Parser_terminal& parser, int m=2, classes A=classes()) {
