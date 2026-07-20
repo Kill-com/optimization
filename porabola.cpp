@@ -3,58 +3,64 @@
 #include <iostream>
 
 const float EPS = 1e-6;
-const float e = M_E; 
 
-float f(float x) {
-    return std::pow((x-2), 2) + std::sin(x)*x;
-}
 
 float Metog_Porabola(std::function<float(float)> f, float a, float c) {
     float b = (c + a) / 2;
     float x = b;          
     float b_old = b;   
 
+    float fa = f(a);
+    float fb = f(b);
+    float fc = f(c);
+    float fb_old = fb;
+
     do {
         b_old = b;       
-        float znam = (c - b) * f(a) + (a - c) * f(b) + (b - a) * f(c);
+        fb_old = fb;     
+
+        float ca = c - a;
+        float cb = c - b;
+        float ab = a + b;
+
+        float znam = cb * fa + (a - c) * fb + (b - a) * fc;
         if (std::abs(znam) < 1e-12) {
             break;        // вырожденная парабола
         }
+        x = -0.5f * (((fb - fa) * ca * cb - ab * znam) / znam);
+        float fx = f(x);
 
-        x = -0.5 * (((f(b) - f(a)) * (c - a) * (c - b) -
-                    (a + b) * ((c - b) * f(a) + (a - c) * f(b) + (b - a) * f(c))) / znam);
-
-        std::cout << "x = " << x << ", f(x) = " << f(x)
+        std::cout << "x = " << x << ", f(x) = " << fx
                   << ", a = " << a << ", b = " << b
-                  << ", f(b) = " << f(b) << ", c = " << c << "\n";
+                  << ", f(b) = " << fb << ", c = " << c << "\n";
 
         if (x <= a || x >= c) {
             break;
         }
 
-        if (f(x) < f(b)) {
+        if (fx < fb) {
             if (x < b) {
                 c = b;
+                fc = fb;  
                 b = x;
+                fb = fx;
             } else { 
                 a = b;
+                fa = fb;  
                 b = x;
+                fb = fx;
             }
         } else {
             if (x < b) {
                 a = x;
+                fa = fx;
             } else { 
                 c = x;
+                fc = fx;
             }
         }
 
-    } while ((c - a) > EPS || fabs(f(b) - f(b_old)) > EPS);
+    } while ((c - a) > EPS || std::abs(fb - fb_old) > EPS);
 
     return b;
-}
-
-int main() {
-    float res_x = Metog_Porabola(f, -10, 2);
-    std::cout << "res : x = " << res_x << ", y = " << f(res_x) << std::endl;
-    return 0;
 }
