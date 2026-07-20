@@ -3,8 +3,10 @@ a.exe
 t.json
 lib.a
 optimization.exe
-run.bat
-
+compile_commands.json
+.vscode
+test
+test.cpp
 # папки
 methods_comp/
 function_comp/

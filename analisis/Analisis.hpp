@@ -4,23 +4,6 @@
 #include "../exect/execution.hpp"
 #include "c_analisis.hpp"
 
-// ============================================
-// ОПРЕДЕЛЕНИЕ ОПЕРАЦИОННОЙ СИСТЕМЫ
-// ============================================
-#ifdef _WIN32
-    #define IS_WINDOWS 1
-    #define IS_LINUX 0
-    #define PLATFORM_NAME "Windows"
-#elif __linux__
-    #define IS_WINDOWS 0
-    #define IS_LINUX 1
-    #define PLATFORM_NAME "Linux"
-#else
-    #define IS_WINDOWS 0
-    #define IS_LINUX 0
-    #define PLATFORM_NAME "Unknown"
-#endif
-
 //класс вызова анализируемой функции
 class EXECTED : protected METHOD_L{
     private:
@@ -48,7 +31,11 @@ class EXECTED : protected METHOD_L{
     template<typename Methods, typename Functions, typename... Args>
     void analis_linux(Methods m, Functions f,Args&&... args){
         //анализ процессора с помощью линукса
+        Profiler_linux profiler;
+        profiler.start();
         exect(m,f,std::forward<Args>(args)...);
+        profiler.stop();
+        std::cout<<profiler<<std::endl;
         //конец анализа с помощью линукса
     }
     public:
@@ -57,7 +44,7 @@ class EXECTED : protected METHOD_L{
     template<typename... Args>
     void operator()(std::string f,Args&&... args){
         auto exect_wrapper = [this](auto process, auto process_f, auto&&... wrapped_args) {
-            #if IS_LINUX
+            #if __linux__
             // На Linux
                 this->analis_linux(process, process_f, std::forward<decltype(wrapped_args)>(wrapped_args)...);
             #else

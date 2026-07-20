@@ -10,39 +10,39 @@ namespace fs = std::filesystem;
 
 template<typename classes>
 void exect_(Parser_terminal& parser, int m=2, classes A=classes()) {
-        bool need_retry = false;
-        std::vector<std::string> failed_args;
-        // Цикл по аргументам
-        for (size_t i = 0; i < parser.getKeyCount(m); i++) {
-            std::string function = parser.getKeyArg(i, m);
-            // УСЛОВИЕ: если нет расширения .dll
-            if (fs::is_directory(function)) {
-                failed_args.push_back(function);
-                parser.del_el(m,i);
-                i--;
-                need_retry = true;
+    bool need_retry = false;
+    std::vector<std::string> failed_args;
+    // Цикл по аргументам
+    for (size_t i = 0; i < parser.getKeyCount(m); i++) {
+        std::string function = parser.getKeyArg(i, m);
+        // УСЛОВИЕ: если нет расширения .dll
+        if (fs::is_directory(function)) {
+            failed_args.push_back(function);
+            parser.del_el(m,i);
+            i--;
+            need_retry = true;
+        }else{
+            if(m==2){
+                classes A(function);
+                std::cout<<"Обработка. Метод: "<<function;
+                Parser_terminal p(parser);
+                exect_(p, 1,A);
             }else{
-                if(m==2){
-                    classes A(function);
-                    std::cout<<"Обработка. Метод: "<<function;
-                    Parser_terminal p(parser);
-                    exect_(p, 1,A);
-                }else{
-                    std::cout<<" Функция: "<<function<<std::endl;
-                    A(function, 1,2);
-                }
+                std::cout<<" Функция: "<<function<<std::endl;
+                A(function, 1,2);
             }
         }
-        // УСЛОВИЕ ДЛЯ РЕКУРСИВНОГО ВЫЗОВА
-        if (need_retry) {   
-            // Создаём новый парсер с исправленными аргументами
-            Parser_file new_parser(parser);
-            
-            std::tuple<int,std::vector<std::string>> args ={m, failed_args};
-            new_parser.parse(args);
-            //  ВЫЗЫВАЕМ СЕБЯ С НОВЫМ ПАРСЕРОМ
-            exect_(new_parser,m, A);
-        }
+    }
+    // УСЛОВИЕ ДЛЯ РЕКУРСИВНОГО ВЫЗОВА
+    if (need_retry) {   
+        // Создаём новый парсер с исправленными аргументами
+        Parser_file new_parser(parser);
+        
+        std::tuple<int,std::vector<std::string>> args ={m, failed_args};
+        new_parser.parse(args);
+        //  ВЫЗЫВАЕМ СЕБЯ С НОВЫМ ПАРСЕРОМ
+        exect_(new_parser,m, A);
+    }
 }
 
 void exect(Parser_terminal& parser){
