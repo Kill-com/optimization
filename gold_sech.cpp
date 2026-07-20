@@ -1,50 +1,39 @@
+#define _USE_MATH_DEFINES
 #include <functional>
 #include <cmath>
 #include <iostream>
+#include <numbers>          
 
 const float EPS = 1e-6;
-const double TAU = (std::sqrt(5.0) - 1.0) / 2.0; 
+const float e = M_E; 
+const double TAU = 0.6180339887498949;   
 
-float f(float x) {
-    return (x-2)*(x-2) + std::sin(x);
-}
 
-float Gold_Sechenie(std::function<float(float)> f, float a, float b) {
-    float x1 = a + (1-TAU)*(b-a);  
-    float x2 = a + TAU*(b-a);
-    std::cout<<"a="<<a<<", x1="<< x1<< ", x2="<< x2<<", b="<<b<< std::endl;
-
-    float f1 = f(x1);
-    float f2 = f(x2);
+extern "C" {
+float f(std::function<float(float)> f, float a, float b) {
+    float x1 = a + (1 - TAU) * (b - a);
+    float x2 = a + TAU * (b - a);
+    float fx1 = f(x1);
+    float fx2 =  f(x2);
+    std::cout << "a=" << a << ", x1=" << x1 << ", x2=" << x2 << ", b=" << b << std::endl;
 
     while ((b - a) > EPS) {
-    if (f1 < f2) {
-        b = x2;
-        x2 = x1;
-        f2 = f1;
-
-        x1 = a + (1 - TAU) * (b - a);
-        f1 = f(x1);
+        if (fx1 < fx2) {
+            b = x2;
+            x2 = x1;
+            fx2 = fx1;
+            x1 = a + (1 - TAU) * (b - a);
+            fx1 = f(x1);
+        } else {
+            a = x1;
+            x1 = x2;
+            fx1 = fx2;
+            x2 = a + TAU * (b - a);
+            fx2 = f(x2);
+        }
+        std::cout << "a=" << a << ", x1=" << x1 << ", x2=" << x2 << ", b=" << b << std::endl;
     }
-    else {
-        a = x1;
-        x1 = x2;
-        f1 = f2;
 
-        x2 = a + TAU * (b - a);
-        f2 = f(x2);
-    }
-
-    std::cout << "a=" << a
-              << ", x1=" << x1
-              << ", x2=" << x2
-              << ", b=" << b << '\n';
+    return (a + b) / 2;
 }
-return (a+ b)/2;
-}
-
-int main() {
-    float res_x = Gold_Sechenie(f, -10, 10);
-    std::cout << "res : x = " << res_x << ", y = " << f(res_x) << std::endl;
-    return 0;
 }
