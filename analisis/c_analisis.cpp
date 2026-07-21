@@ -21,6 +21,7 @@ long long Counter::get_result(const std::string& name) const{
         return -1;
 }
 
+#if __linux__
 bool Profiler_linux::add_counter(const std::string& name){
         // 1. Инициализация библиотеки (вызывается один раз в программе)
         static bool initialized = []() {
@@ -88,7 +89,7 @@ void Profiler_linux::stop(){
         }
         running = false;
 }
-
+#endif
 
 std::ostream& operator<<(std::ostream& os, const Counter& counter){
          for (const auto& c : counter.counters) {

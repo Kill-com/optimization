@@ -29,6 +29,22 @@ class METHOD_L{
             }
         }
     }
+    // Сборка для функции пользователя
+    template<typename Func,typename Functios,typename... Args>
+    void collect(Func func, Functios functions, Args&&... args){
+        auto method = PluginLoader::loadLibrary(this->methods);
+        if (!method) {
+            std::cerr << "Failed to load plugin!" << std::endl;
+        }else{
+            using ProcessFunc_m = float(std::function<float(float)>, float, float);
+            auto* process = PluginLoader::getFunction<ProcessFunc_m>(method.get(), "f");
+            if (!process) {
+                std::cerr << "Function 'f' not found!" << std::endl;
+            }else{
+                func(process, functions, std::forward<Args>(args)...);
+            }
+        }
+    }
 
     template<typename... Args>
     void operator()(const std::string& functions,Args&&... args){

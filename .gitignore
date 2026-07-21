@@ -9,6 +9,6 @@ test
 test.cpp
 # папки
 methods_comp/
-function_comp/
+f_comp/
 build/
 -p

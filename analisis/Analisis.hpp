@@ -10,18 +10,21 @@ class EXECTED : protected METHOD_L{
     template<typename Methods, typename Functions, typename... Args>
     void analis(Methods m, Functions f,Args&&... args){
         std::cout<<"start of analisis"<<std::endl;
-
+        Profiler profiler;
+        auto count_target=Profiler::count_target_f(f,&profiler);
         //Получаем начальный такт процессора
         auto start = CycleCounter::rdtsc();
 
         //Запуск основной работы
-        exect(m,f,std::forward<Args>(args)...);
+        exect(m,count_target,std::forward<Args>(args)...);
         
         //Получаем конечный такт процессора
         auto end = CycleCounter::rdtsc();
         auto cycles = end - start;
+
         std::cout<<"end of analisis"<<std::endl;
         std::cout<<cycles<<std::endl;
+        std::cout<<profiler.count<<std::endl;
 
 
         std::cout<<"save results in created file"<<std::endl;
