@@ -56,7 +56,7 @@ void exect(Parser_terminal& parser){
 }
 
 int main(int argc, char* argv[]) {
-
+    
     Parser_terminal parser;
     std::tuple<int, char**> args = {argc, argv};
     if (!parser.parse(args)) {

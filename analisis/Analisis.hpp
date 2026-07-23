@@ -12,18 +12,9 @@ class EXECTED : protected METHOD_L{
         std::cout<<"start of analisis"<<std::endl;
         Profiler profiler;
         auto count_target=Profiler::count_target_f(f,&profiler);
-        //Получаем начальный такт процессора
-        auto start = CycleCounter::rdtsc();
-
         //Запуск основной работы
-        exect(m,count_target,std::forward<Args>(args)...);
-        
-        //Получаем конечный такт процессора
-        auto end = CycleCounter::rdtsc();
-        auto cycles = end - start;
-
-        std::cout<<"end of analisis"<<std::endl;
-        std::cout<<cycles<<std::endl;
+        auto m_=CycleCounter::call(m);
+        exect(m_,count_target,std::forward<Args>(args)...);
         std::cout<<profiler.count<<std::endl;
 
 
@@ -31,12 +22,12 @@ class EXECTED : protected METHOD_L{
 
         // return result;
     }
-    template<typename Methods, typename Functions, typename... Args>
-    void analis_linux(Methods m, Functions f,Args&&... args){
+    template<typename Func,typename... Args>
+    void analis_linux(Func func, Args&&... args){
         //анализ процессора с помощью линукса
         Profiler_linux profiler;
         profiler.start();
-        exect(m,f,std::forward<Args>(args)...);
+        func();
         profiler.stop();
         std::cout<<profiler<<std::endl;
         //конец анализа с помощью линукса
@@ -54,6 +45,12 @@ class EXECTED : protected METHOD_L{
                 this->analis(process, process_f, std::forward<decltype(wrapped_args)>(wrapped_args)...);
             #endif
             };
-        collect(exect_wrapper,f,std::forward<Args>(args)...);
+        collecting(exect_wrapper,methods,f,std::forward<Args>(args)...);
     };
 };
+
+
+
+
+
+

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 
+
 const float EPS = 1e-6;
 const float e = M_E; 
 
@@ -53,9 +54,4 @@ float f(std::function<float(float)> target_f, float a, float c) {
 
     return b;
 }
-}
-int main() {
-    float res_x = f(target_f, -10, 2);
-    std::cout << "res : x = " << res_x << ", y = " << target_f(res_x) << std::endl;
-    return 0;
 }

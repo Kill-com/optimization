@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <unistd.h>      // syscall(), close()
 #include <cstring> 
 #include <functional>
@@ -13,12 +14,25 @@
     #include <perfmon/pfmlib_perf_event.h>
 #endif
 
-class CycleCounter {
-public:
+
+class CycleCounter{
     static uint64_t rdtsc();
+    public:
+    template<typename Ret, typename... Args>
+    static std::function<Ret(Args...)> call(Ret (*func)(Args...)) {
+        return [func](Args... args) -> Ret {
+            auto start = CycleCounter::rdtsc();
+            auto result =func(args...);
+            auto end = CycleCounter::rdtsc();
+            auto cycles = end - start;
+            std::cout<<cycles<<std::endl;
+            return result;
+        };
+    }
+    
 };
 
-class Counter{
+class Container_Counter{
     protected:
     struct Counter_ {
         int fd;              // Файловый дескриптор счетчика
@@ -28,49 +42,54 @@ class Counter{
     std::vector<Counter_> counters;  // Все счетчики
     bool running = false;           // Состояние (запущены/остановлены)
     public:
-    virtual ~Counter()=default;
-    virtual bool add_counter(const std::string&)=0;
-    virtual void start()=0;
-    virtual void stop()=0;
-    long long get_result(const std::string&) const;
-    friend std::ostream& operator<<(std::ostream&, const Counter&);
-};
-    
-class Profiler:public Counter{
-    public:
     long long count=0;
-    // template<typename Methods, typename Functions, typename... Args>
-    // Profiler(Methods m, Functions f,Args&&... args){
-    // }
-    // количество вычеслений целевой функции
-      // Принимает указатель на функцию, возвращает std::function с той же сигнатурой
-    template<typename Ret, typename... Args>
-    static std::function<Ret(Args...)> count_target_f(Ret (*func)(Args...), Profiler* profiler) {
+    virtual bool add_counter(const std::string&)=0;
+    virtual ~Container_Counter()=default;
+    long long get_result(const std::string&) const;
+    friend std::ostream& operator<<(std::ostream&, const Container_Counter&);
+};
+
+class Start_Counter{
+    public:
+    virtual void start()=0;
+    virtual ~Start_Counter()=default;
+};    
+class Stop_Counter{
+    public:
+    virtual void stop()=0;
+    virtual ~Stop_Counter()=default;  
+};
+
+class Profiler_target_f{
+    public:
+    template<typename Ret, typename... Args, typename Class_container>
+    static std::function<Ret(Args...)> count_target_f(Ret (*func)(Args...), Class_container* profiler) {
         return [func, profiler](Args... args) -> Ret {
             ++profiler->count;
             return func(args...);
         };
     }
-    template<typename Target_Func>
-    static std::function<Target_Func> count_target_f(Target_Func func, Profiler* profiler){
+    template<typename Target_Func, typename Class_container>
+    static std::function<Target_Func> count_target_f(Target_Func func, Class_container* profiler){
         return [func, profiler](auto&&... args) -> decltype(auto) {
             ++profiler->count;
             return func(std::forward<decltype(args)>(args)...);
         };
     }
+};
+class Profiler:public Container_Counter, public Profiler_target_f{
+    public:
     bool add_counter(const std::string& m){return true;};
-    void start(){};
-    void stop(){};
 };
 
-class Profiler_linux: public Counter{
+class Profiler_linux:public Container_Counter, public Start_Counter, public Stop_Counter, public Profiler_target_f{
     public:
     Profiler_linux(){
         // assembling
         add_counter("task-clock"); 
         add_counter("page-faults");
         add_counter("PERF_COUNT_SW_CONTEXT_SWITCHES");
-        // add_counter("msr/pperf/");
+        add_counter("msr/pperf/");
     };
     bool add_counter(const std::string&);
     void start();

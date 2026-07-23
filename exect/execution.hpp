@@ -5,57 +5,81 @@
 #include "../supported/assembler/assembling_methods.hpp"
 //запуск методов на решение целевой функции
 
-class METHOD_L{
+class Conteiner{
     protected:
     std::string methods;
-    public:
-    METHOD_L(std::string m=""):methods(m){};
+    Conteiner(std::string m=""):methods(m){};
+};
 
-    template<typename Func,typename... Args>
-    void collect(Func func, const std::string functions, Args&&... args){
-        auto method = PluginLoader::loadLibrary(this->methods);
-        auto function = PluginLoader::loadLibrary(functions);
-        if (!method || !function) {
+class Collected_sig{
+    protected:
+    using ProcessFunc_f=float(float);
+    using ProcessFunc_m = float(std::function<float(float)>, float, float);
+};
+
+class Collected:private Collected_sig{
+    private:
+    LibraryPtr load(const std::string func_path){
+        LibraryPtr func = PluginLoader::loadLibrary(func_path);
+        if (!func) {
             std::cerr << "Failed to load plugin!" << std::endl;
+            return NULL;
         }else{
-            using ProcessFunc_m = float(std::function<float(float)>, float, float);
-            auto* process = PluginLoader::getFunction<ProcessFunc_m>(method.get(), "f");
-            using ProcessFunc_f = float(float);
-            auto process_f = PluginLoader::getFunction<ProcessFunc_f>(function.get(), "target_f");
-            if (!process || !process_f) {
-                std::cerr << "Function 'f' not found!" << std::endl;
-            }else{
-                func(process, process_f, std::forward<Args>(args)...);
-            }
+            return func;
+        }
+    }
+    protected:
+    template<typename Func,typename... Args>
+    void collecting(Func func ,const std::string methods_ ,const std::string functions_, Args&&... args){
+        auto method = load(methods_);
+        auto function = load(functions_);
+        using ProcessFunc_m = float(std::function<float(float)>, float, float);
+        auto* process = PluginLoader::getFunction<ProcessFunc_m>(method.get(), "f");
+        using ProcessFunc_f = float(float);
+        auto process_f = PluginLoader::getFunction<ProcessFunc_f>(function.get(), "target_f");
+        if (!process || !process_f) {
+            std::cerr << "Function 'f' not found!" << std::endl;
+        }else{
+            func(process, process_f, std::forward<Args>(args)...);
         }
     }
     // Сборка для функции пользователя
+
     template<typename Func,typename Functios,typename... Args>
-    void collect(Func func, Functios functions, Args&&... args){
-        auto method = PluginLoader::loadLibrary(this->methods);
-        if (!method) {
-            std::cerr << "Failed to load plugin!" << std::endl;
+    void collecting(Func func,const std::string methods_, Functios functions, Args&&... args){
+        auto method = load(methods_);
+        using ProcessFunc_m = float(std::function<float(float)>, float, float);
+        auto* process = PluginLoader::getFunction<ProcessFunc_m>(method.get(), "f");
+        if (!process) {
+            std::cerr << "Function 'f' not found!" << std::endl;
         }else{
-            using ProcessFunc_m = float(std::function<float(float)>, float, float);
-            auto* process = PluginLoader::getFunction<ProcessFunc_m>(method.get(), "f");
-            if (!process) {
-                std::cerr << "Function 'f' not found!" << std::endl;
-            }else{
-                func(process, functions, std::forward<Args>(args)...);
-            }
+            func(process, functions, std::forward<Args>(args)...);
         }
     }
+};
 
+class METHOD_L: public Conteiner, protected Collected{
+    public:
+    METHOD_L(std::string m=""):Conteiner(m){};
     template<typename... Args>
     void operator()(const std::string& functions,Args&&... args){
         auto exect_wrapper = [this](auto process, auto process_f, auto&&... wrapped_args) {
             this->exect(process, process_f, std::forward<decltype(wrapped_args)>(wrapped_args)...);
         };
         
-        collect(exect_wrapper, functions, std::forward<Args>(args)...);
+        collecting(exect_wrapper, methods, functions, std::forward<Args>(args)...);
+    }
+    template<typename Func,typename... Args>
+    void operator()(Func functions,Args&&... args){
+        auto exect_wrapper = [this](auto process, auto process_f, auto&&... wrapped_args) {
+            this->exect(process, process_f, std::forward<decltype(wrapped_args)>(wrapped_args)...);
+        };
+        
+        collecting(exect_wrapper, methods, functions, std::forward<Args>(args)...);
     }
     template<typename Methods, typename Functions, typename... Args>
     void exect(Methods m, Functions f, Args&&... args){
+        // std::cout<<f;
         m(f, std::forward<Args>(args)...);
     }
     virtual ~METHOD_L() = default;

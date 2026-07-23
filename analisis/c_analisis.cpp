@@ -1,5 +1,6 @@
 #include "c_analisis.hpp"
 
+
 //получение тактов процессора
 uint64_t CycleCounter::rdtsc() {
         #ifdef __x86_64__
@@ -11,7 +12,7 @@ uint64_t CycleCounter::rdtsc() {
         #endif
 }
 
-long long Counter::get_result(const std::string& name) const{
+long long Container_Counter::get_result(const std::string& name) const{
         for (const auto& c : counters) {
             if (c.name == name) {
                 return c.result;
@@ -91,7 +92,7 @@ void Profiler_linux::stop(){
 }
 #endif
 
-std::ostream& operator<<(std::ostream& os, const Counter& counter){
+std::ostream& operator<<(std::ostream& os, const Container_Counter& counter){
          for (const auto& c : counter.counters) {
             os << "  " << c.name << ": " << c.result;
         }

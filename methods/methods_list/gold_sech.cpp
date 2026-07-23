@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 
+
 const float EPS = 1e-6;
 const float e = M_E; 
 const double TAU = (std::sqrt(5.0) - 1.0) / 2.0; 
@@ -34,9 +35,4 @@ float f(std::function<float(float)> target_f, float a, float b) {
 
     return(a+ b)/2;
 }
-}
-int main() {
-    float res_x = f(target_f, -10, 10);
-    std::cout << "res : x = " << res_x << ", y = " << target_f(res_x) << std::endl;
-    return 0;
 }

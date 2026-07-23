@@ -17,7 +17,7 @@ if exist "build" (
     mkdir build
     cd build
     cmake ..
-    make
+    cmake --build build
     cd ..
 )
 
