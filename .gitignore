@@ -3,12 +3,12 @@ a.exe
 t.json
 lib.a
 optimization.exe
+optimization
 compile_commands.json
 .vscode
 test
 test.cpp
 # папки
-methods_comp/
-f_comp/
+compiled/
 build/
 -p

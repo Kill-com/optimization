@@ -11,13 +11,13 @@ if "%1"=="-s" (
 
 if exist "build" (
     chcp 65001 > nul
-    optimization.exe -f target_function/compiled/f_comp/ -m methods/compiled/methods_comp/ %EXTRA_ARGS%
+    optimization.exe -f plugins/f_list.cpp -m plugins/gold_sech.cpp plugins/porabola.cpp %EXTRA_ARGS%
     pause
 ) else (
     mkdir build
     cd build
     cmake ..
-    cmake --build build
+    @REM cmake --build build
     cd ..
 )
 

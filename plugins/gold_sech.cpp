@@ -1,18 +1,20 @@
+
 #define _USE_MATH_DEFINES 
 #include <functional>
 #include <cmath>
 #include <iostream>
 
 
+
+namespace gold_sech_name{
 const float EPS = 1e-6;
 const float e = M_E; 
 const double TAU = (std::sqrt(5.0) - 1.0) / 2.0; 
-
-float target_f(float x) {
+static float target_f(float x) {
     return std::pow((x-2), 2) + std::sin(x);
 }
-extern "C" {
-float f(std::function<float(float)> target_f, float a, float b) {
+
+static float f(std::function<float(float)> target_f, float a, float b) {
     float x1 = a + (1-TAU)*(b-a);  
     float x2 = a + TAU*(b-a);
     std::cout<<"a="<<a<<", x1="<< x1<< ", x2="<< x2<<", b="<<b<< std::endl;
@@ -36,3 +38,8 @@ float f(std::function<float(float)> target_f, float a, float b) {
     return(a+ b)/2;
 }
 }
+float(*gold_sech())(std::function<float(float)> target_f, float a, float b){
+    return &gold_sech_name::f;
+}
+
+

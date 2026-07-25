@@ -1,17 +1,19 @@
+
 #define _USE_MATH_DEFINES 
 #include <functional>
 #include <cmath>
 #include <iostream>
 
 
+namespace porabola_name{
 const float EPS = 1e-6;
 const float e = M_E; 
 
-float target_f(float x) {
+static float target_f(float x) {
     return std::pow((x-2), 2) + std::sin(x)*x;
 }
-extern "C" {
-float f(std::function<float(float)> target_f, float a, float c) {
+
+static float f(std::function<float(float)> target_f, float a, float c) {
     float b = (c + a) / 2;
     float x = b;          
     float b_old = b;   
@@ -54,4 +56,8 @@ float f(std::function<float(float)> target_f, float a, float c) {
 
     return b;
 }
+}
+
+float(*porabola())(std::function<float(float)> target_f, float a, float c){
+    return &porabola_name::f;
 }

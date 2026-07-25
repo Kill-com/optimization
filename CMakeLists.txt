@@ -5,6 +5,18 @@ project(optimization)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
+# инициализация плагинов
+file(GLOB_RECURSE SOURCES_plug "plugins/*.cpp")
+string(REPLACE ";" " " SOURCES_ARGS "${SOURCES_plug}")
+add_custom_target(build_tools
+    COMMAND ${CMAKE_MAKE_PROGRAM} -f Makefile 
+        ARGS="${DATA_PATH_ARGS}"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/support_by_make 
+    COMMENT "Сборка external_tools с помощью Makefile"
+    VERBATIM
+)
+
 # ============================================
 # Определение платформы
 # ============================================
@@ -62,8 +74,6 @@ endif()
 file(GLOB_RECURSE SOURCES "./*.cpp")
 list(FILTER SOURCES EXCLUDE REGEX ".*/build/.*")
 list(FILTER SOURCES EXCLUDE REGEX ".*CMakeCXXCompilerId.*")
-list(FILTER SOURCES EXCLUDE REGEX ".*/methods/.*")
-list(FILTER SOURCES EXCLUDE REGEX ".*/target_function/.*")
 list(FILTER SOURCES EXCLUDE REGEX ".*/support_by_make/.*")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -87,17 +97,7 @@ else()
     target_compile_definitions(${PROJECT_NAME} PRIVATE NO_PAPI)
 endif()
 
-add_custom_target(build_tools
-    COMMAND ${CMAKE_MAKE_PROGRAM} -f Makefile 
-        SRC_DIR=../target_function/f_list 
-        PLUGIN_DIR=../target_function/compiled/f_comp 
-    COMMAND ${CMAKE_MAKE_PROGRAM} -f Makefile 
-        SRC_DIR=../methods/methods_list 
-        PLUGIN_DIR=../methods/compiled/methods_comp 
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/support_by_make 
-    COMMENT "Сборка external_tools с помощью Makefile"
-    VERBATIM
-)
+
 add_dependencies(${PROJECT_NAME} build_tools)
 
 # ============================================
