@@ -2,33 +2,31 @@
 #include <cmath>
 #include <iostream>
 
-const float EPS = 1e-6;
+template<typename T, typename Func>
+T parabola_method(Func f, T a, T c) {
+    T b = (c + a) / 2;
+    T x = b;
+    T b_old = b;
 
-
-float Metog_Porabola(std::function<float(float)> f, float a, float c) {
-    float b = (c + a) / 2;
-    float x = b;          
-    float b_old = b;   
-
-    float fa = f(a);
-    float fb = f(b);
-    float fc = f(c);
-    float fb_old = fb;
+    T fa = f(a);
+    T fb = f(b);
+    T fc = f(c);
+    T fb_old = fb;
 
     do {
-        b_old = b;       
-        fb_old = fb;     
+        b_old = b;
+        fb_old = fb;
 
-        float ca = c - a;
-        float cb = c - b;
-        float ab = a + b;
+        T ca = c - a;
+        T cb = c - b;
+        T ab = a + b;
 
-        float znam = cb * fa + (a - c) * fb + (b - a) * fc;
+        T znam = cb * fa + (a - c) * fb + (b - a) * fc;
         if (std::abs(znam) < 1e-12) {
-            break;        // вырожденная парабола
+            break;          // вырожденная парабола
         }
         x = -0.5f * (((fb - fa) * ca * cb - ab * znam) / znam);
-        float fx = f(x);
+        T fx = f(x);
 
         std::cout << "x = " << x << ", f(x) = " << fx
                   << ", a = " << a << ", b = " << b
@@ -41,12 +39,12 @@ float Metog_Porabola(std::function<float(float)> f, float a, float c) {
         if (fx < fb) {
             if (x < b) {
                 c = b;
-                fc = fb;  
+                fc = fb;
                 b = x;
                 fb = fx;
-            } else { 
+            } else {
                 a = b;
-                fa = fb;  
+                fa = fb;
                 b = x;
                 fb = fx;
             }
@@ -54,7 +52,7 @@ float Metog_Porabola(std::function<float(float)> f, float a, float c) {
             if (x < b) {
                 a = x;
                 fa = fx;
-            } else { 
+            } else {
                 c = x;
                 fc = fx;
             }
