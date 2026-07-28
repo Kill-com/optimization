@@ -76,6 +76,21 @@ list(FILTER SOURCES EXCLUDE REGEX ".*/build/.*")
 list(FILTER SOURCES EXCLUDE REGEX ".*CMakeCXXCompilerId.*")
 list(FILTER SOURCES EXCLUDE REGEX ".*/support_by_make/.*")
 
+
+# Исключаем collect_plugins.cpp из основного списка исходников //это ксюша
+file(GLOB_RECURSE SOURCES_EXCLUDED "./collect_plugins.cpp")
+list(REMOVE_ITEM SOURCES ${SOURCES_EXCLUDED})
+
+# Создаём отдельный исполняемый файл для генератора
+add_executable(collect_plugins_exe collect_plugins.cpp)
+
+set_property(TARGET collect_plugins_exe PROPERTY CXX_STANDARD 17) //это ксюша
+set_property(TARGET collect_plugins_exe PROPERTY CXX_STANDARD_REQUIRED ON)
+
+target_include_directories(collect_plugins_exe PRIVATE ${CMAKE_SOURCE_DIR})
+
+
+
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 # ============================================
