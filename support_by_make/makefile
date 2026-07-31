@@ -1,70 +1,16 @@
-ifeq ($(OS),Windows_NT)
-    # Windows
-    EXT = .dll
-    CXXFLAGS += -shared
-    LDFLAGS += -Wl,--out-implib,lib$(NAME).a
-    RM = del /Q
-    MKDIR = mkdir
-else
-    UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Linux)
-        # Linux
-        EXT = .so
-        CXXFLAGS += -shared -fPIC
-    else ifeq ($(UNAME_S),Darwin)
-        # macOS
-        EXT = .dylib
-        CXXFLAGS += -dynamiclib
-    else
-        # Unknown -  Linux
-        EXT = .so
-        CXXFLAGS += -shared -fPIC
-    endif
-endif
+# Makefile
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall
+TARGET = collect_plugins
+SOURCES = collect_plugins.cpp
 
-CXX = c++
-CXXFLAGS += -std=c++17 -Wall -O2
-LDFLAGS +=
+all: $(TARGET)
+	./$(TARGET) $(ARGS)
 
-SRC_DIR ?= 
-BUILD_DIR = build
-PLUGIN_DIR ?=
-
-SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
-
-# SOURCES = $(shell find $(SRC_DIR) -name '*.cpp')
-
-
-PLUGINS = $(patsubst $(SRC_DIR)/%.cpp,%,$(SOURCES))
-
-
-TARGETS = $(addprefix $(PLUGIN_DIR)/, $(addsuffix $(EXT), $(PLUGINS)))
-
-
-
-.PHONY: all clean info
-
-all: $(PLUGIN_DIR) $(TARGETS)
-
-$(PLUGIN_DIR):
-	@mkdir -p $(PLUGIN_DIR)
-
-$(BUILD_DIR):
-	@mkdir -p $(BUILD_DIR)
-
-$(PLUGIN_DIR)/%$(EXT): $(SRC_DIR)/%.cpp | $(PLUGIN_DIR)
-	$(CXX) $(CXXFLAGS) $< -o $@ $(LDFLAGS)
-
+$(TARGET): $(SOURCES)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SOURCES)
 
 clean:
-	rm -rf $(PLUGIN_DIR)/*$(EXT)
-	rm -rf $(BUILD_DIR)
+	rm -f $(TARGET)
 
-info:
-	@echo "========================================"
-	@echo "OS: $(shell uname -s 2>/dev/null || echo Windows)"
-	@echo "Extension: $(EXT)"
-	@echo "Source folder: $(SRC_DIR)"
-	@echo "Plugin folder: $(PLUGIN_DIR)"
-	@echo "Found plugins: $(PLUGINS)"
-	@echo "========================================"
+.PHONY: all clean

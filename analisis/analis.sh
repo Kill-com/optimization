@@ -1,1 +1,0 @@
-sudo perf stat -e context-switches,cycles,msr/pperf/,page-faults
