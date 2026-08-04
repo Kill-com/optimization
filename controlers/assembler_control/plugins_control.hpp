@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 
+#include "../chek_args_f.hpp"
 #include "../../storagers/storage.hpp"
 
 
@@ -22,39 +23,44 @@ private:
     T storage_class;
     StorageVectorStr storage_func;
     size_t count;
-
-    template<typename PluginProcces, typename... Funcs_Assembling>
+    template<size_t count_,typename PluginProcces, typename... Funcs_Assembling>
     void compiled_simple_impl(PluginProcces&& process, 
                               size_t idx,
                               Funcs_Assembling&&... funcs) {
-        static_assert(sizeof...(Funcs_Assembling) < 100, "Too deep recursion!");
+        // static_assert(sizeof...(Funcs_Assembling) < 100, "Too deep recursion!");
         if (idx >= count) return;
-        auto wrapper = [this, process, idx, &funcs...](auto&& wrapped_args) {
-            if (idx <= 0) {
-                // Финальный вызов
-                this->storage_class(process,
-                    std::forward<decltype(wrapped_args)>(wrapped_args),
-                    std::forward<Funcs_Assembling>(funcs)...
-                );
-            } //else{
-        //         // Рекурсивный вызов со следующим индексом
-        //         this->compiled_simple_impl(
-        //             process,
-        //             idx - 1,
-        //             std::forward<decltype(wrapped_args)>(wrapped_args),
-        //             std::forward<Funcs_Assembling>(funcs)...
-        //         );
-        //     }
-        };
-        
-        collect(wrapper, storage_func[idx]);
+        if constexpr(count_>0){
+            if(idx>0){
+                auto wrapper = [this, process, idx, &funcs...](auto&& wrapped_args) {
+                    // Рекурсивный вызов со следующим индексом
+                    this->compiled_simple_impl<count_-1>(
+                        process,
+                        idx - 1,
+                        std::forward<decltype(wrapped_args)>(wrapped_args),
+                        std::forward<Funcs_Assembling>(funcs)...
+                    );
+                };
+                collect(wrapper, storage_func[idx]);
+                return;
+            }
+            if(idx==0){
+                auto wrapper = [this, process, idx, &funcs...](auto&& wrapped_args){
+                    // Финальный вызов
+                    this->storage_class(process,
+                        std::forward<decltype(wrapped_args)>(wrapped_args),
+                        std::forward<Funcs_Assembling>(funcs)...
+                    );
+                };
+                collect(wrapper, storage_func[idx]);
+            }
+        }
     }   
 protected:
     template<typename PluginProcces>
     void compiled_simple(PluginProcces&& process) {
         if (count > 0) {
             // Начинаем с последнего индекса (count - 1)
-            compiled_simple_impl(
+            compiled_simple_impl<count_std_functions(process)>(
                 std::forward<PluginProcces>(process),
                 count - 1
             );
