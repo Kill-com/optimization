@@ -1,49 +1,49 @@
 #include "parsers.hpp"
 
-void StorageParser::input_info(std::string i){
+void containerParser::input_info(std::string i){
     info.push_back(i);
 }
-StorageParser& StorageParser::operator++(){
+containerParser& containerParser::operator++(){
     info_size++;
     return *this;
 }
-std::vector<std::string>& StorageParser::output_info(){
+std::vector<std::string>& containerParser::output_info(){
     return info;
 }
-size_t StorageParser::output_size() const{
+size_t containerParser::output_size() const{
     return info_size;
 }
-void StorageParser::del_el(size_t index){
+void containerParser::del_el(size_t index){
     info.erase(info.begin() + index); 
     info_size--;
 }
 
 
-IStorageParser::IStorageParser(const IStorageParser& parse){
+IcontainerParser::IcontainerParser(const IcontainerParser& parse){
     this->method=parse.method;
     this->target_function=parse.target_function;
 }
-const std::vector<std::string> IStorageParser::getKey(int i){
+const std::vector<std::string> IcontainerParser::getKey(int i){
     switch (i){
     case 1: return method.output_info();
     case 2: return target_function.output_info();
     };
     return {};
 }
-size_t IStorageParser::getKeyCount(int i){
+size_t IcontainerParser::getKeyCount(int i){
     switch (i){
     case 1: return method.output_size();
     case 2: return target_function.output_size();
     };
     return 0;
 }
-void IStorageParser::del_el(int i, size_t index){
+void IcontainerParser::del_el(int i, size_t index){
     switch (i){
     case 1: method.del_el(index); break;
     case 2: target_function.del_el(index); break;
     }
 }
-std::string IStorageParser::getKeyArg(size_t index, int i){
+std::string IcontainerParser::getKeyArg(size_t index, int i){
     size_t size=getKeyCount(i);
     std::vector<std::string> args=getKey(i);
     return (index < size) ? args[index] : nullptr;

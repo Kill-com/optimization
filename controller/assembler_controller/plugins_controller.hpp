@@ -3,7 +3,7 @@
 #include <string>
 
 #include "../chek_args_f.hpp"
-#include "../../storagers/storage.hpp"
+#include "../../container/container.hpp"
 
 
 class CollectPlug{
@@ -20,8 +20,8 @@ class CollectPlug{
 template<typename T>
 class AssemblerSimple: public CollectPlug{
 private:
-    T storage_class;
-    StorageVectorStr storage_func;
+    T container_class;
+    containerVectorStr container_func;
     size_t count;
     template<size_t count_,typename PluginProcces, typename... Funcs_Assembling>
     void compiled_simple_impl(PluginProcces&& process, 
@@ -40,18 +40,18 @@ private:
                         std::forward<Funcs_Assembling>(funcs)...
                     );
                 };
-                collect(wrapper, storage_func[idx]);
+                collect(wrapper, container_func[idx]);
                 return;
             }
             if(idx==0){
                 auto wrapper = [this, process, idx, &funcs...](auto&& wrapped_args){
                     // Финальный вызов
-                    this->storage_class(process,
+                    this->container_class(process,
                         std::forward<decltype(wrapped_args)>(wrapped_args),
                         std::forward<Funcs_Assembling>(funcs)...
                     );
                 };
-                collect(wrapper, storage_func[idx]);
+                collect(wrapper, container_func[idx]);
             }
         }
     }   
@@ -72,7 +72,7 @@ protected:
     //     auto wrapper = [process, this](auto&&... wrapped_args) {
     //         static size_t idx = current_index - 1;
     //         if (current_index <= 0) {
-    //             this->storage_class(process,
+    //             this->container_class(process,
     //                 std::forward<decltype(wrapped_args)>(wrapped_args)...
     //             );
     //         }else{
@@ -83,12 +83,12 @@ protected:
     //         }
     //     };
     //     count--;
-    //     collect(wrapper, storage_func[count], std::forward<Funcs_Assembling>(funcs)...);
+    //     collect(wrapper, container_func[count], std::forward<Funcs_Assembling>(funcs)...);
     // }
 public:
-    AssemblerSimple(const T& t,const StorageVectorStr& storage):
-    storage_class(t), storage_func(storage){
-        count=storage_func.getsize();
+    AssemblerSimple(const T& t,const containerVectorStr& container):
+    container_class(t), container_func(container){
+        count=container_func.getsize();
     };
 };
 

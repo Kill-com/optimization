@@ -2,13 +2,7 @@
 
 #include <tuple>
 
-template<class Derived>
-class ControlDerived{
-protected:
-    Derived* derived_ptr;
-public:
-    ControlDerived() : derived_ptr(static_cast<Derived*>(this)) {};
-};
+#include "../controller/derived_controller.hpp"
 
 template<template<typename...> class Derived, typename T>
 class ControlVector:public ControlDerived<Derived<T>>{

@@ -2,9 +2,9 @@
 
 #include <memory>
 #include "analis.hpp"
-#include "../controlers/start_controls/execution.hpp"
 
-#include "../controlers/start_controls/inteface.hpp"
+#include "../controller/start_controller/execution.hpp"
+#include "../controller/start_controller/inteface.hpp"
 
 template<typename ...Args>
 class AnalisExect:public IExect<Args...>{

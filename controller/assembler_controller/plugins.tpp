@@ -4,7 +4,7 @@
 // ============================================================
 
 #include <string>
-#include "plugins_control.hpp"
+#include "plugins_controller.hpp"
 #include "plugins/f_list.cpp"
 #include "plugins/gold_sech.cpp"
 #include "plugins/porabola.cpp"

@@ -1,17 +1,17 @@
 #pragma once
 
-#include "../../storagers/storage.hpp"
-#include "../assembler_control/plugins_control.hpp"
+#include "../../container/container.hpp"
+#include "../assembler_controller/plugins_controller.hpp"
 
 class ICollectStart{
 protected:
-    StorageStr method;
-    StorageVectorStr target_function;
+    containerStr method;
+    containerVectorStr target_function;
 public:
     template<typename ...Args>
     ICollectStart(std::string method_name, Args&&... function_name):
-    method(StorageStr(method_name)),
-    target_function(StorageVectorStr(std::forward<Args>(function_name)...))
+    method(containerStr(method_name)),
+    target_function(containerVectorStr(std::forward<Args>(function_name)...))
     {}
 };
 
@@ -32,7 +32,7 @@ private:
         };
     }
 protected:
-    StorageValue<Args...> value;
+    containerValue<Args...> value;
     template<typename... Plugins, typename Tuple>
     void unpacking_tuple(Tuple&& tuple,Plugins&&...func){
         auto all_args = std::tuple_cat(
@@ -42,5 +42,5 @@ protected:
         std::apply(getwrapped_start(), all_args);
     }
 public:
-    IExect(StorageValue<Args...>& vl):value(vl){};
+    IExect(containerValue<Args...>& vl):value(vl){};
 };

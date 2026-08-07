@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
          << "//  DO NOT EDIT MANUALLY\n"
          << "// ============================================================\n\n"
          << "#include <string>\n"
-         << "#include \"plugins_control.hpp\"\n";
+         << "#include \"plugins_controller.hpp\"\n";
 
     // Включаем все переданные файлы
     for (const auto& p : plugins) {

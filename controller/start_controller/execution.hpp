@@ -17,7 +17,7 @@ public:
 template<template<typename...> class Classes, typename ...Args>
 class StartCalculation:public ICollectStart, public IStartCalculation{
 private:
-    StorageValue<Args...> value;
+    containerValue<Args...> value;
 public:
     StartCalculation(){};
     template<typename ...Func>
@@ -26,7 +26,7 @@ public:
     {};
     template<typename ...U>
     void input_value(U&&...u){
-        value=StorageValue<Args...>(std::forward<U>(u)...);
+        value=containerValue<Args...>(std::forward<U>(u)...);
     }
     void operator()(){
         StartPlug<Classes<Args...>> start_plug(value, target_function);

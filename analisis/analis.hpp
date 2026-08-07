@@ -14,7 +14,7 @@
     #include <perfmon/pfmlib_perf_event.h>
 #endif
 
-#include "../storagers/storage.hpp"
+#include "../container/container.hpp"
 
 
 class CycleCounter{
@@ -31,6 +31,7 @@ public:
             return result;
         };
     }
+
     uint64_t getcycles(){return info;};
 };
 
@@ -42,7 +43,6 @@ public:
     std::function<Ret(Args...)> prof_function(Ret (*func)(Args...)) {
         return [func](Args... args) -> Ret {
             ++info;
-            // std::cout << "Lambda called, info = " << info.getinfo() << std::endl;
             return func(args...);
         };
     }
