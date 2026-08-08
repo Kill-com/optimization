@@ -17,61 +17,39 @@ list(FILTER SOURCES EXCLUDE REGEX ".*/plugins/.*")
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 # ============================================
-# Поиск библиотеки PFM (обязательно)
-# ============================================
-find_package(PkgConfig REQUIRED)
-
-# Ищем libpfm4 через pkg-config
-pkg_check_modules(PFM libpfm4)
-if(PFM_FOUND)
-    message(STATUS "✅ PFM found via pkg-config")
-    target_include_directories(${PROJECT_NAME} PRIVATE ${PFM_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${PFM_LIBRARIES})
-    target_compile_options(${PROJECT_NAME} PRIVATE ${PFM_CFLAGS_OTHER})
-else()
-    # Если pkg-config не нашел, ищем вручную
-    find_library(PFM_LIBRARY NAMES pfm)
-    find_path(PFM_INCLUDE_DIR perfmon/pfmlib.h)
-    
-    if(PFM_LIBRARY AND PFM_INCLUDE_DIR)
-        message(STATUS "✅ PFM found manually")
-        target_include_directories(${PROJECT_NAME} PRIVATE ${PFM_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} PRIVATE ${PFM_LIBRARY})
-    else()
-        message(FATAL_ERROR "❌ PFM library not found! Install libpfm4-dev")
-    endif()
-endif()
-
-# ============================================
-# Опционально: PAPI (если нужен)
-# ============================================
-option(USE_PAPI "Enable PAPI support" OFF)
-
-if(USE_PAPI)
-    find_package(PAPI REQUIRED)
-    if(PAPI_FOUND)
-        message(STATUS "✅ PAPI found")
-        target_include_directories(${PROJECT_NAME} PRIVATE ${PAPI_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} PRIVATE ${PAPI_LIBRARIES})
-        target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_PAPI)
-    else()
-        message(STATUS "⚠️ PAPI not found, compiling without PAPI support")
-        target_compile_definitions(${PROJECT_NAME} PRIVATE NO_PAPI)
-    endif()
-else()
-    target_compile_definitions(${PROJECT_NAME} PRIVATE NO_PAPI)
-endif()
-
-# ============================================
-# Дополнительные флаги для Linux
+# Поиск библиотеки PFM (только для Linux)
 # ============================================
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_package(PkgConfig REQUIRED)
+    
+    pkg_check_modules(PFM libpfm4)
+    if(PFM_FOUND)
+        message(STATUS "PFM found via pkg-config")
+        target_include_directories(${PROJECT_NAME} PRIVATE ${PFM_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${PFM_LIBRARIES})
+        target_compile_options(${PROJECT_NAME} PRIVATE ${PFM_CFLAGS_OTHER})
+    else()
+        find_library(PFM_LIBRARY NAMES pfm)
+        find_path(PFM_INCLUDE_DIR perfmon/pfmlib.h)
+        
+        if(PFM_LIBRARY AND PFM_INCLUDE_DIR)
+            message(STATUS "PFM found manually")
+            target_include_directories(${PROJECT_NAME} PRIVATE ${PFM_INCLUDE_DIR})
+            target_link_libraries(${PROJECT_NAME} PRIVATE ${PFM_LIBRARY})
+        else()
+            message(FATAL_ERROR "PFM library not found! Install libpfm4-dev")
+        endif()
+    endif()
+    
     target_compile_definitions(${PROJECT_NAME} PRIVATE __linux__)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS})
+else()
+    message(STATUS "Skipping PFM (not Linux)")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE NO_PFM)
 endif()
 
 # ============================================
-# Флаги компиляции для отладки (опционально)
+# Флаги компиляции
 # ============================================
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(${PROJECT_NAME} PRIVATE -g -O0 -Wall -Wextra)
@@ -86,15 +64,10 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
         $<TARGET_FILE:${PROJECT_NAME}>
         ${CMAKE_SOURCE_DIR}/
-    COMMENT "Копирование ${PROJECT_NAME} в главную папку"
+    COMMENT "Copying ${PROJECT_NAME} to main directory"
 )
 
-# ============================================
-# Вывод информации о сборке
-# ============================================
 message(STATUS "========================================")
 message(STATUS "Project: ${PROJECT_NAME}")
-message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
-message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Sources: ${SOURCES}")
+message(STATUS "Platform: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "========================================")

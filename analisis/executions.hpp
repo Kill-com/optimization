@@ -76,7 +76,7 @@ public:
     }
 };
 template<typename ...Args>
-class WindowAnalis:protected IAnalis<Args...>{
+class WindowAnalis:public IAnalis<Args...>{
 public:
     using IAnalis<Args...>::IAnalis;
 };

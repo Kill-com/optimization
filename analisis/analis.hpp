@@ -27,7 +27,7 @@ public:
 
 class CycleCounter:public ToLog{
 private:
-    uint64_t info;
+    uint64_t info=0;
     uint64_t rdtsc();
 public:
     template<typename Ret, typename... Args>
