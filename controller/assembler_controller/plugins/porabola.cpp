@@ -9,7 +9,7 @@ namespace porabola_name{
 const float EPS = 1e-6;
 const float e = M_E; 
 
-static float target_f(float x) {
+[[maybe_unused]] static float target_f(float x) {
     return std::pow((x-2), 2) + std::sin(x)*x;
 }
 

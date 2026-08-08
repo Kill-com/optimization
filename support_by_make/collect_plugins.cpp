@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Генерируем plugins.cpp
-    const std::string output_path = "../controlers/assembler_control/plugins.tpp";
+    const std::string output_path = "../controller/assembler_controller/plugins.tpp";
     std::ofstream file(output_path, std::ios::trunc);
     if (!file) {
         std::cerr << "Failed to create " << output_path << "\n";

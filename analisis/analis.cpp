@@ -14,7 +14,7 @@ uint64_t CycleCounter::rdtsc() {
         #endif
 }
 
-void CycleCounter::getcycles(){
+void CycleCounter::tolog(){
     std::stringstream ss;
     ss<<"\n=================================\n"
     <<"Cycle count: "<<info;
@@ -74,22 +74,31 @@ bool ConteinerPerf::add_counter(const std::string& name){
     }
 }
 
-void ConteinerPerf::getperf(){
+void ConteinerPerf::tolog(){
     std::stringstream ss;
-    ss<<<<"\n=================================\n"
+    ss<<"\n=================================\n"
     <<"Perf result:\n ";
-    for (const auto& c : counter.counters) {
+    for (auto& c : counters) {
         ss << "  " << c.name << ": " << c.result;
     }
     logger->info(ss.str());
 }
 void ProfilerPerf::start(){
+    add_counter("task-clock"); 
+    add_counter("page-faults");
+    add_counter("PERF_COUNT_SW_CONTEXT_SWITCHES");
+    add_counter("msr/pperf/");
     if (running) {
-        std::cerr << "Error, Счетчики уже запущены!" << std::endl;
+        std::cerr << "Error: Счетчики уже запущены!" << std::endl;
         return;
     }
     
+    std::cout << "Запуск счетчиков..." << std::endl;
     for (auto& c : counters) {
+        if (c.fd == -1) {
+            std::cerr << "Warning: Счетчик " << c.name << " не инициализирован (fd=-1)" << std::endl;
+            continue;  // <-- Пропускаем невалидные счетчики
+        }
         ioctl(c.fd, PERF_EVENT_IOC_RESET, 0);
         ioctl(c.fd, PERF_EVENT_IOC_ENABLE, 0);
     }
@@ -98,21 +107,27 @@ void ProfilerPerf::start(){
 
 void ProfilerPerf::stop(){
     if (!running) {
-            std::cerr << "Error, Счетчики уже остановлены!" << std::endl;
-            return;
+        std::cerr << "Error: Счетчики уже остановлены!" << std::endl;
+        return;
     }
 
+    std::cout << "Остановка счетчиков..." << std::endl;
     for (auto& c : counters) {
-            ioctl(c.fd, PERF_EVENT_IOC_DISABLE, 0);
-            read(c.fd, &c.result, sizeof(c.result));
+        if (c.fd == -1) {
+            std::cerr << "Warning: Счетчик " << c.name << " не инициализирован (fd=-1)" << std::endl;
+            continue;  // <-- Пропускаем невалидные счетчики
+        }
+        
+        ioctl(c.fd, PERF_EVENT_IOC_DISABLE, 0);
+        ssize_t bytes_read = read(c.fd, &c.result, sizeof(c.result));
+        if (bytes_read != sizeof(c.result)) {
+            std::cerr << "Error: Не удалось прочитать счетчик " << c.name 
+                      << " (bytes_read=" << bytes_read << ", errno=" << errno 
+                      << ": " << strerror(errno) << ")" << std::endl;
+            c.result = -1;
+        }
     }
     running = false;
 }
 
-std::ostream& operator<<(std::ostream& os, const ConteinerPerf& counter){
-        for (const auto& c : counter.counters) {
-            os << "  " << c.name << ": " << c.result;
-        }
-        return os;
-}
 #endif

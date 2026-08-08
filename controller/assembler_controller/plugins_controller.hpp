@@ -60,31 +60,13 @@ protected:
     void compiled_simple(PluginProcces&& process) {
         if (count > 0) {
             // Начинаем с последнего индекса (count - 1)
-            compiled_simple_impl<count_std_functions(process)>(
+            compiled_simple_impl<function_counter<std::decay_t<PluginProcces>>::value>(
                 std::forward<PluginProcces>(process),
                 count - 1
             );
         }
     }
-    // template<typename PluginProcces,typename... Funcs_Assembling>
-    // void compiled_simple(PluginProcces&& process,Funcs_Assembling&&... funcs){
-    //     static size_t current_index = count;
-    //     auto wrapper = [process, this](auto&&... wrapped_args) {
-    //         static size_t idx = current_index - 1;
-    //         if (current_index <= 0) {
-    //             this->container_class(process,
-    //                 std::forward<decltype(wrapped_args)>(wrapped_args)...
-    //             );
-    //         }else{
-    //             this->compiled_simple(
-    //                 process,
-    //                 std::forward<decltype(wrapped_args)>(wrapped_args)...
-    //             );
-    //         }
-    //     };
-    //     count--;
-    //     collect(wrapper, container_func[count], std::forward<Funcs_Assembling>(funcs)...);
-    // }
+
 public:
     AssemblerSimple(const T& t,const containerVectorStr& container):
     container_class(t), container_func(container){

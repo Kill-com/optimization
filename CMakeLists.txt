@@ -4,70 +4,6 @@ project(optimization)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v")s
-
-
-# # инициализация плагинов
-# file(GLOB_RECURSE SOURCES_plug "plugins/*.cpp")
-# string(REPLACE ";" " " SOURCES_ARGS "${SOURCES_plug}")
-# add_custom_target(build_tools
-#     COMMAND ${CMAKE_MAKE_PROGRAM} -f Makefile 
-#         ARGS="${DATA_PATH_ARGS}"
-#     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/support_by_make 
-#     COMMENT "Сборка external_tools с помощью Makefile"
-#     VERBATIM
-# )
-
-# ============================================
-# Определение платформы
-# ============================================
-if(WIN32)
-    message(STATUS " Building for Windows (MinGW)")
-    set(IS_WINDOWS TRUE)
-else()
-    message(STATUS " Building for Linux")
-    set(IS_WINDOWS FALSE)
-endif()
-
-# ============================================
-# PAPI - только для Linux
-# ============================================
-option(USE_PAPI "Enable PAPI support" ON)
-
-if(NOT WIN32 AND USE_PAPI)
-    # Используем find_package для более надежного поиска
-    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
-    find_package(PAPI)
-    
-    if(PAPI_FOUND)
-        message(STATUS " PAPI found via find_package: ${PAPI_LIBRARIES}")
-        set(HAVE_PAPI TRUE)
-        set(PAPI_INCLUDE_DIR ${PAPI_INCLUDE_DIRS})
-        set(PAPI_LIBRARY ${PAPI_LIBRARIES})
-    else()
-        # Ручной поиск, если find_package не сработал
-        message(STATUS " PAPI not found via find_package, trying manual search...")
-        find_path(PAPI_INCLUDE_DIR NAMES papi.h 
-            PATHS /usr/include /usr/local/include /opt/papi/include)
-        find_library(PAPI_LIBRARY NAMES papi 
-            PATHS /usr/lib /usr/lib/x86_64-linux-gnu /usr/local/lib /opt/papi/lib)
-        
-        if(PAPI_INCLUDE_DIR AND PAPI_LIBRARY)
-            message(STATUS " PAPI found manually: ${PAPI_LIBRARY}")
-            set(HAVE_PAPI TRUE)
-        else()
-            message(WARNING " PAPI not found - using stub mode")
-            set(HAVE_PAPI FALSE)
-        endif()
-    endif()
-else()
-    set(HAVE_PAPI FALSE)
-    if(WIN32)
-        message(STATUS " PAPI disabled on Windows")
-    else()
-        message(STATUS " PAPI disabled by user")
-    endif()
-endif()
 
 # ============================================
 # Исходники
@@ -78,44 +14,70 @@ list(FILTER SOURCES EXCLUDE REGEX ".*CMakeCXXCompilerId.*")
 list(FILTER SOURCES EXCLUDE REGEX ".*/support_by_make/.*")
 list(FILTER SOURCES EXCLUDE REGEX ".*/plugins/.*")
 
-
-# Исключаем collect_plugins.cpp из основного списка исходников //это ксюша
-# file(GLOB_RECURSE SOURCES_EXCLUDED "./support_by_make/collect_plugins.cpp")
-# list(REMOVE_ITEM SOURCES ${SOURCES_EXCLUDED})
-
-# # Создаём отдельный исполняемый файл для генератора
-# add_executable(collect_plugins_exe ./support_by_make/collect_plugins.cpp)
-
-# set_property(TARGET collect_plugins_exe PROPERTY CXX_STANDARD 17) #//это ксюша
-# set_property(TARGET collect_plugins_exe PROPERTY CXX_STANDARD_REQUIRED ON)
-
-# target_include_directories(collect_plugins_exe PRIVATE ${CMAKE_SOURCE_DIR})
-
-
-
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 # ============================================
-# Подключение библиотек
+# Поиск библиотеки PFM (обязательно)
 # ============================================
-if(HAVE_PAPI)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${PAPI_INCLUDE_DIR})
-    target_link_libraries(${PROJECT_NAME} ${PAPI_LIBRARY})
-    target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_PAPI)
+find_package(PkgConfig REQUIRED)
+
+# Ищем libpfm4 через pkg-config
+pkg_check_modules(PFM libpfm4)
+if(PFM_FOUND)
+    message(STATUS "✅ PFM found via pkg-config")
+    target_include_directories(${PROJECT_NAME} PRIVATE ${PFM_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${PFM_LIBRARIES})
+    target_compile_options(${PROJECT_NAME} PRIVATE ${PFM_CFLAGS_OTHER})
+else()
+    # Если pkg-config не нашел, ищем вручную
+    find_library(PFM_LIBRARY NAMES pfm)
+    find_path(PFM_INCLUDE_DIR perfmon/pfmlib.h)
     
-    # Добавляем дополнительные библиотеки, если нужны
-    # pfm_* функции находятся в libpapi, но могут требовать libpfm4
-    find_library(PFM_LIBRARY NAMES pfm libpfm)
-    if(PFM_LIBRARY)
-        target_link_libraries(${PROJECT_NAME} ${PFM_LIBRARY})
-        message(STATUS " PFM library found: ${PFM_LIBRARY}")
+    if(PFM_LIBRARY AND PFM_INCLUDE_DIR)
+        message(STATUS "✅ PFM found manually")
+        target_include_directories(${PROJECT_NAME} PRIVATE ${PFM_INCLUDE_DIR})
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${PFM_LIBRARY})
+    else()
+        message(FATAL_ERROR "❌ PFM library not found! Install libpfm4-dev")
+    endif()
+endif()
+
+# ============================================
+# Опционально: PAPI (если нужен)
+# ============================================
+option(USE_PAPI "Enable PAPI support" OFF)
+
+if(USE_PAPI)
+    find_package(PAPI REQUIRED)
+    if(PAPI_FOUND)
+        message(STATUS "✅ PAPI found")
+        target_include_directories(${PROJECT_NAME} PRIVATE ${PAPI_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${PAPI_LIBRARIES})
+        target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_PAPI)
+    else()
+        message(STATUS "⚠️ PAPI not found, compiling without PAPI support")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE NO_PAPI)
     endif()
 else()
     target_compile_definitions(${PROJECT_NAME} PRIVATE NO_PAPI)
 endif()
 
+# ============================================
+# Дополнительные флаги для Linux
+# ============================================
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE __linux__)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS})
+endif()
 
-add_dependencies(${PROJECT_NAME})
+# ============================================
+# Флаги компиляции для отладки (опционально)
+# ============================================
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(${PROJECT_NAME} PRIVATE -g -O0 -Wall -Wextra)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -O2 -Wall)
+endif()
 
 # ============================================
 # Копирование исполняемого файла
@@ -126,3 +88,13 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         ${CMAKE_SOURCE_DIR}/
     COMMENT "Копирование ${PROJECT_NAME} в главную папку"
 )
+
+# ============================================
+# Вывод информации о сборке
+# ============================================
+message(STATUS "========================================")
+message(STATUS "Project: ${PROJECT_NAME}")
+message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Sources: ${SOURCES}")
+message(STATUS "========================================")

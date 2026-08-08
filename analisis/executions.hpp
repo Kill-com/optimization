@@ -6,18 +6,43 @@
 #include "../controller/start_controller/execution.hpp"
 #include "../controller/start_controller/interface.hpp"
 
-template<typename ...Args>
-class AnalisExect:public IExect<Args...>{
+class ConteinerLog{
+private:
+    static std::vector<ToLog*> commands;  // Только сырые указатели
+
 public:
-    using IExect<Args...>::IExect;
-    template<typename Method,typename... Func>
-    void operator()(Method&& method,Func&&... func){
-        this->unpacking_tuple(
-            this->value.getinfo(),
-            std::forward<Func>(func)...
-        );
+    // Для передачи существующих объектов
+    template<class T>
+    static void input_command(T* cl) {
+        if (cl) {
+            commands.push_back(cl);
+        }
+    }
+    
+    // Для создания новых объектов (НЕ ИСПОЛЬЗУЙТЕ С UNIQUE_PTR!)
+    template<class T, typename... Args>
+    static void add_command(Args&&... args) {
+        commands.push_back(new T(std::forward<Args>(args)...));
+    }
+    
+    static void reset(){
+        // ВНИМАНИЕ: Удаляем объекты, если они были созданы через add_command
+        for (auto* cmd : commands) {
+            cmd->reset();
+        }
+        commands.clear();
+    }
+    
+    static void startlog(){
+        for (auto* cmd : commands) {
+            if (cmd) {
+                cmd->tolog();
+            }
+        }
     }
 };
+std::vector<ToLog*> ConteinerLog::commands;
+
 template<typename ...Args>
 class IAnalis: public SimpleExect<Args...>,
     public CycleCounter, public ProfilerFunctions
@@ -34,6 +59,8 @@ public:
     using SimpleExect<Args...>::SimpleExect;
     template<typename Method,typename... Func>
     void operator()(Method&& method,Func&&... func){
+        ConteinerLog::input_command(static_cast<CycleCounter*>(this));
+        ConteinerLog::input_command(static_cast<ProfilerFunctions*>(this));
         std::cout<<"start of analisis"<<std::endl;
         auto method_cycles=prof_cycle(method);
         auto methods_funcs=std::make_tuple(
@@ -44,24 +71,25 @@ public:
             getwrapped(),
             methods_funcs
         );
-        getcycles();
-        getcount();
+        ConteinerLog::startlog();
+        ConteinerLog::reset();
     }
 };
 template<typename ...Args>
-class WindowAnalis:public IAnalis<Args...>{
+class WindowAnalis:protected IAnalis<Args...>{
 public:
     using IAnalis<Args...>::IAnalis;
 };
 
 template<typename ...Args>
-class LinuxAnalis:public IAnalis<Args...>,
+class LinuxAnalis:protected IAnalis<Args...>,
     public ProfilerPerf
 {
 public:
     using IAnalis<Args...>::IAnalis;
     template<typename Method,typename... Func>
     void operator()(Method&& method,Func&&... func){
+        ConteinerLog::input_command(static_cast<ProfilerPerf*>(this));
         IAnalis<Args...>::operator()(
             prof_perf(method),
             std::forward<Func>(func)...

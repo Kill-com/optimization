@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <unistd.h>      // syscall(), close()
 #include <cstring> 
+#include <sstream>
 #if __linux__
     #include <sys/ioctl.h>   // ioctl() для управления счетчиками
     #include <linux/perf_event.h>  // Константы PERF_TYPE_*, PERF_COUNT_*
@@ -17,11 +18,27 @@
 #include "../container/container.hpp"
 #include "../controller/logger_controller/handler.hpp"
 
-class CycleCounter{
+class ToLog{
+public:
+    virtual ~ToLog()=default;
+    virtual void tolog()=0;
+    virtual void reset()=0;
+};
+
+class CycleCounter:public ToLog{
 private:
     uint64_t info;
     uint64_t rdtsc();
 public:
+    template<typename Ret, typename... Args>
+    std::function<Ret(Args...)> prof_cycle(std::function<Ret(Args...)>& func) {
+        return [this,func](Args... args) -> Ret {
+            info = CycleCounter::rdtsc();
+            auto result =func(args...);
+            info = CycleCounter::rdtsc() - info;
+            return result;
+        };
+    }
     template<typename Ret, typename... Args>
     std::function<Ret(Args...)> prof_cycle(Ret (*func)(Args...)) {
         return [this,func](Args... args) -> Ret {
@@ -31,11 +48,11 @@ public:
             return result;
         };
     }
-
-    void getcycles();
+    void reset(){};
+    void tolog();
 };
 
-class ProfilerFunctions{
+class ProfilerFunctions:public ToLog{
 private:
     inline static uint64_t info=0;
 public:
@@ -46,15 +63,19 @@ public:
             return func(args...);
         };
     }
-    void getcount(){
+    void tolog(){
         std::stringstream ss;
         ss<<"\n=================================\n"
         <<"Function count: "<<info;
         logger->info(ss.str());
     };
+    void reset(){
+        info=0;
+    }
 };
 
-class ConteinerPerf{
+
+class ConteinerPerf:public ToLog{
 protected:
     struct Counter_ {
         int fd;              // Файловый дескриптор счетчика
@@ -65,16 +86,15 @@ protected:
     bool running = false;           // Состояние (запущены/остановлены)
     bool add_counter(const std::string&);
     long long get_result(const std::string&) const;
-    void getperf();
+public:
+    void tolog();
+    void reset(){};
 };
+
+
 class ProfilerPerf:public ConteinerPerf{
 public:
-    ProfilerPerf(){
-        add_counter("task-clock"); 
-        add_counter("page-faults");
-        add_counter("PERF_COUNT_SW_CONTEXT_SWITCHES");
-        add_counter("msr/pperf/");
-    }
+    ProfilerPerf(){}
     void start();
     void stop();
     template<typename Ret, typename... Args>
@@ -87,9 +107,14 @@ public:
         };
     }
     ~ProfilerPerf(){
+        std::cout << "=== ProfilerPerf DESTRUCTOR ===" << std::endl;
+        std::cout << "  this = " << this << std::endl;
+        
         for (auto& c : counters) {
+            std::cout << "  Closing: " << c.name << " (fd=" << c.fd << ")" << std::endl;
             if (c.fd != -1) {
                 close(c.fd);
+                c.fd = -1;
             }
         }
     }

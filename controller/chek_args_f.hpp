@@ -31,5 +31,11 @@ struct function_counter<Ret(*)(Args...)> {
 
 template<typename Func>
 constexpr int count_std_functions(Func&&) {
-    return function_counter<std::remove_pointer_t<std::decay_t<Func>>>::value;
+    using Decayed = std::decay_t<Func>;
+    // Прямо используем специализацию для указателей
+    return function_counter<Decayed>::value;
+}
+template<typename Func>
+constexpr int count_std_functions_type() {
+    return function_counter<std::decay_t<Func>>::value;
 }

@@ -10,7 +10,7 @@ namespace gold_sech_name{
 const float EPS = 1e-6;
 const float e = M_E; 
 const double TAU = (std::sqrt(5.0) - 1.0) / 2.0; 
-static float target_f(float x) {
+[[maybe_unused]] static float target_f(float x) {
     return std::pow((x-2), 2) + std::sin(x);
 }
 
