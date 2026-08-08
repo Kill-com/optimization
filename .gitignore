@@ -7,6 +7,7 @@ optimization
 compile_commands.json
 .vscode
 test
+app.log
 test.cpp
 collect_plugins.exe
 # папки

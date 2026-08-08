@@ -4,7 +4,7 @@
 #include "analis.hpp"
 
 #include "../controller/start_controller/execution.hpp"
-#include "../controller/start_controller/inteface.hpp"
+#include "../controller/start_controller/interface.hpp"
 
 template<typename ...Args>
 class AnalisExect:public IExect<Args...>{
@@ -44,9 +44,8 @@ public:
             getwrapped(),
             methods_funcs
         );
-        std::cout<<getcycles()<<std::endl;
-        std::cout<<getcount()<<std::endl;
-        // foo();
+        getcycles();
+        getcount();
     }
 };
 template<typename ...Args>

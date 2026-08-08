@@ -15,7 +15,7 @@
 #endif
 
 #include "../container/container.hpp"
-
+#include "../controller/logger_controller/handler.hpp"
 
 class CycleCounter{
 private:
@@ -32,7 +32,7 @@ public:
         };
     }
 
-    uint64_t getcycles(){return info;};
+    void getcycles();
 };
 
 class ProfilerFunctions{
@@ -46,10 +46,11 @@ public:
             return func(args...);
         };
     }
-    long getcount(){
-        long val = info;
-        info = 0;
-        return val;
+    void getcount(){
+        std::stringstream ss;
+        ss<<"\n=================================\n"
+        <<"Function count: "<<info;
+        logger->info(ss.str());
     };
 };
 
@@ -64,7 +65,7 @@ protected:
     bool running = false;           // Состояние (запущены/остановлены)
     bool add_counter(const std::string&);
     long long get_result(const std::string&) const;
-    friend std::ostream& operator<<(std::ostream&, const ConteinerPerf&);
+    void getperf();
 };
 class ProfilerPerf:public ConteinerPerf{
 public:

@@ -1,5 +1,6 @@
 #pragma once
-#include "inteface.hpp"
+
+#include "interface.hpp"
 
 template<typename ...Args>
 class SimpleExect:public IExect<Args...>{
