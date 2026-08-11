@@ -1,37 +1,36 @@
-const double EPS = 1e-6;
-const double H = 1e-4;
-const int max_iter = 100;
-
-double derivative1(std::function<double(double)> f, double x)
+template<typename T>
+T derivative1(const std::function<T(T)>& f, T x, T h)
 {
-    return (f(x + H) - f(x - H)) / (2.0 * H);
+    return (f(x + h) - f(x - h)) / (static_cast<T>(2) * h);
 }
 
-double derivative2(std::function<double(double)> f, double x)
+template<typename T>
+T derivative2(const std::function<T(T)>& f, T x, T h)
 {
-    return (f(x + H) - 2.0 * f(x) + f(x - H)) / (H * H);
+    return (f(x + h) - static_cast<T>(2) * f(x) + f(x - h)) / (h * h);
 }
 
-double Newton(std::function<double(double)> f, double x)
+template<typename T>
+T Newton(const std::function<T(T)>& f, T x, T eps, T h, int max_iter)
 {
     for (int i = 0; i < max_iter; i++)
     {
-        double df = derivative1(f, x);
-        double ddf = derivative2(f, x);
+        T df = derivative1<T>(f, x, h);
+        T ddf = derivative2<T>(f, x, h);
 
-        if (std::abs(df) < EPS)
+        if (std::abs(df) < eps)
         {
             break;
         }
 
-        if (std::abs(ddf) < EPS)
+        if (std::abs(ddf) < eps)
         {
             break;
         }
 
-        double x_new = x - df / ddf;
+        T x_new = x - df / ddf;
 
-        if (std::abs(x_new - x) < EPS)
+        if (std::abs(x_new - x) < eps)
         {
             x = x_new;
             break;
