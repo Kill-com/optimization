@@ -3,6 +3,7 @@
 #include <functional>
 #include <cmath>
 #include <iostream>
+// #include <memory>
 
 
 
@@ -14,19 +15,21 @@ const double TAU = (std::sqrt(5.0) - 1.0) / 2.0;
     return std::pow((x-2), 2) + std::sin(x);
 }
 
-static float f(std::function<float(float)> target_f, float a, float b) {
-    float x1 = a + (1-TAU)*(b-a);  
-    float x2 = a + TAU*(b-a);
+
+template<typename T>
+T f(std::function<T(T)> target_f, T a, T b) {
+    T x1 = a + (1-TAU)*(b-a);  
+    T x2 = a + TAU*(b-a);
     std::cout<<"a="<<a<<", x1="<< x1<< ", x2="<< x2<<", b="<<b<< std::endl;
 
     while ((b - a) > EPS) {
-        float x1 = a + (1-TAU)*(b-a);  
-        float x2 = a + TAU*(b-a);
+        T x1 = a + (1-TAU)*(b-a);  
+        T x2 = a + TAU*(b-a);
         if (target_f(x1) < target_f(x2)){
             b = x2;
             x2 = x1;
             x1 = a + (1-TAU)*(x2-a);            
-        } 
+        }
         else{
             a = x1;
             x1 = x2;
@@ -38,8 +41,14 @@ static float f(std::function<float(float)> target_f, float a, float b) {
     return(a+ b)/2;
 }
 }
-float(*gold_sech())(std::function<float(float)> target_f, float a, float b){
-    return &gold_sech_name::f;
+
+template<typename T>
+auto gold_sech(){
+    return &gold_sech_name::f<T>;
 }
+
+// float(*gold_sech())(std::function<float(float)> target_f, float a, float b){
+//     return &gold_sech_name::f;
+// }
 
 

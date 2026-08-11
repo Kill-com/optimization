@@ -12,15 +12,15 @@ const float e = M_E;
 [[maybe_unused]] static float target_f(float x) {
     return std::pow((x-2), 2) + std::sin(x)*x;
 }
-
-static float f(std::function<float(float)> target_f, float a, float c) {
-    float b = (c + a) / 2;
-    float x = b;          
-    float b_old = b;   
+template<typename T>
+T f(std::function<T(T)> target_f, T a, T c) {
+    T b = (c + a) / 2;
+    T x = b;          
+    T b_old = b;   
 
     do {
         b_old = b;       
-        float znam = (c - b) * target_f(a) + (a - c) * target_f(b) + (b - a) * target_f(c);
+        T znam = (c - b) * target_f(a) + (a - c) * target_f(b) + (b - a) * target_f(c);
         if (std::abs(znam) < 1e-12) {
             break;        // вырожденная парабола
         }
@@ -58,6 +58,7 @@ static float f(std::function<float(float)> target_f, float a, float c) {
 }
 }
 
-float(*porabola())(std::function<float(float)> target_f, float a, float c){
-    return &porabola_name::f;
+template<typename T>
+auto porabola(){
+    return &porabola_name::f<T>;
 }

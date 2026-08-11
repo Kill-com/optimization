@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
         file << "#include \"" << p << "\"\n";
     }
 
-    file << "template<typename Func>\n"
+    file << "template<typename T,typename Func>\n"
          << "void CollectPlug::collect(Func func, const std::string plugin_name) {\n";
 
     // Генерируем цепочку if-else
@@ -71,10 +71,10 @@ int main(int argc, char* argv[]) {
         std::string name = p.stem().string();   // имя без пути и расширения
         if (i == 0) {
             file << "    if (plugin_name == \"" << name << ".cpp\") "
-                 << "func(" << name << "());\n";
+                 << "func(" << name << "<T>());\n";
         } else {
             file << "    else if (plugin_name == \"" << name << ".cpp\") "
-                 << "func(" << name << "());\n";
+                 << "func(" << name << "<T>());\n";
         }
     }
     file << "    }\n";

@@ -50,7 +50,7 @@ class IAnalis: public SimpleExect<Args...>,
 private:
     auto getwrapped(){
         return [this](auto&& ...args){
-            return SimpleExect<Args...>::operator()(
+            return SimpleExect<Args...>::exect(
                 std::forward<decltype(args)>(args)...
             );
         };
@@ -58,7 +58,7 @@ private:
 public:
     using SimpleExect<Args...>::SimpleExect;
     template<typename Method,typename... Func>
-    void operator()(Method&& method,Func&&... func){
+    void exect(Method&& method,Func&&... func){
         ConteinerLog::input_command(static_cast<CycleCounter*>(this));
         ConteinerLog::input_command(static_cast<ProfilerFunctions*>(this));
         std::cout<<"start of analisis"<<std::endl;
@@ -88,9 +88,9 @@ class LinuxAnalis:protected IAnalis<Args...>,
 public:
     using IAnalis<Args...>::IAnalis;
     template<typename Method,typename... Func>
-    void operator()(Method&& method,Func&&... func){
+    void exect(Method&& method,Func&&... func){
         ConteinerLog::input_command(static_cast<ProfilerPerf*>(this));
-        IAnalis<Args...>::operator()(
+        IAnalis<Args...>::exect(
             prof_perf(method),
             std::forward<Func>(func)...
         );

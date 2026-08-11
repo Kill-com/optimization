@@ -15,11 +15,11 @@ void exect(ParserTerminal& parser){
             logger->info(ss.str());
             std::initializer_list<std::string> args = {function};
             if(parser.get_for_analis()){
-                StartCalculation<SimpleExect,int,int> st(method, args);
+                StartCalculation<SimpleExect,float,float> st(method, args);
                 st.input_value(1,3);
                 st();
             }else{
-                StartCalculation<AnalisFactory,int,int> st(method, args);
+                StartCalculation<AnalisFactory,float,float> st(method, args);
                 st.input_value(1,3);
                 st();
 

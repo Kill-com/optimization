@@ -7,7 +7,7 @@ class SimpleExect:public IExect<Args...>{
 public:
     using IExect<Args...>::IExect;
     template<typename... Func>
-    void operator()(Func&&... func){
+    void exect(Func&&... func){
         this->unpacking_tuple(
             this->value.getinfo(),
             std::forward<Func>(func)...
@@ -18,7 +18,8 @@ public:
 template<template<typename...> class Classes, typename ...Args>
 class StartCalculation:public ICollectStart, public IStartCalculation{
 private:
-    containerValue<Args...> value;
+    ContainerValue<Args...> value;
+    using FirstType = typename std::tuple_element<0, std::tuple<Args...>>::type;
 public:
     StartCalculation(){};
     template<typename ...Func>
@@ -27,11 +28,11 @@ public:
     {};
     template<typename ...U>
     void input_value(U&&...u){
-        value=containerValue<Args...>(std::forward<U>(u)...);
+        value=ContainerValue<Args...>(std::forward<U>(u)...);
     }
     void operator()(){
-        StartPlug<Classes<Args...>> start_plug(value, target_function);
+        StartPlug<Classes<Args...>> startplug(value, target_function);
         std::string method_name = method;
-        start_plug(method_name);
+        startplug.template start_plug<FirstType>(method_name);
     }
 };

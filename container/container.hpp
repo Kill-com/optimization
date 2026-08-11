@@ -37,7 +37,7 @@ public:
     using IcontainerVector<std::string>::IcontainerVector;
 };
 template<typename ...Args>
-class containerValue:public Icontainer<std::tuple<Args...>>,
+class ContainerValue:public Icontainer<std::tuple<Args...>>,
     public ConrolTuple{
 public:
     using Icontainer<std::tuple<Args...>>::Icontainer;
