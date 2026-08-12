@@ -1,17 +1,20 @@
 
 #include "parser_flags.hpp"
 
+// Обработка аргументов командной строки и заполнение внутренних структур данных
 bool Parser::parse(int argc, char* argv[]) {
-        // Pre-allocate memory to avoid reallocations
+        //Резервируем память для векторов
         size_t estimated_args = (argc - 1) / 2;
         key1_args.reserve(estimated_args);
         key2_args.reserve(estimated_args);
         
         if (argc == 1) return false;
-        
+
+        //текущий обрабатываемы ключ
         enum KeyType { NONE, KEY1, KEY2 };
         KeyType currentKey = NONE;
-        
+
+        // Перебираем все аргументы и распознаем ключи
         for (int i = 1; i < argc; i++) {
             std::string_view arg(argv[i]);
             
@@ -34,6 +37,6 @@ bool Parser::parse(int argc, char* argv[]) {
                 }
             }
         }
-        
+        // Успешно, если есть ключ -f и хотя бы одно значение для него
         return (has_key1 && !key1_args.empty());
     }
