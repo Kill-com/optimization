@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 
+// классс для парсинга аргументов командной строки
 class Parser {
 private:
     // Хранит аргументы без копирования
