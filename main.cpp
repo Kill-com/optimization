@@ -9,14 +9,14 @@
 
 namespace fs = std::filesystem;
 
-//checking the file extension
+//проверка расширения файла
 bool hasExtension(const std::string_view& filename, const std::string& ext) {
     fs::path path(filename);
     return path.extension() == ext;
 }
 int main(int argc, char* argv[]) {
-    Parser parser;
-    
+    Parser parser; //парсинг
+    //справка по проге
     if (!parser.parse(argc, argv)) {
         std::cerr << "Use the -f or -function key to enter --function files"
          <<"or a json file with file addresses."
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    // Fast access
+    //Получение файлов функций для оптимизации, через аргументы ключа -f
     std::string_view function;
     for (size_t i = 0; i < parser.getKey1Count(); i++) {
         function=parser.getKey1Arg(i);
@@ -40,6 +40,8 @@ int main(int argc, char* argv[]) {
         }
         std::cout << "  " << parser.getKey1Arg(i) << std::endl;
     }
+
+    // Получение названий методов через аргументы -m
     std::string_view method;
     for (size_t i = 0; i < parser.getKey2Count(); i++) {
         method=parser.getKey2Arg(i);
@@ -48,7 +50,8 @@ int main(int argc, char* argv[]) {
         }
         std::cout << "  " << parser.getKey2Arg(i) << std::endl;
     }
-    
+
+     // Выполнение программы в зависимости от наличия ключа -s (с анализом или без)
     if(parser.getflag()){
         //тут будет цикл а пока...
         EXECUTER A(method, function);
