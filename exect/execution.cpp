@@ -5,6 +5,7 @@
 #include "execution.hpp"
 #include "../supported/assembler/assembling_methods.hpp"
 
+//загрузка динамических библиотек и выполнение целевой функции
 void EXECUTER::exect(){
     //загрузка динамических библиотек с методами и функциями
     auto method = PluginLoader::loadLibrary(this->methods);
