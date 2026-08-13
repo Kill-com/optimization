@@ -11,7 +11,7 @@ private:
     static std::vector<ToLog*> commands;  // Только сырые указатели
 
 public:
-    // Для передачи существующих объектов
+    // Для передачи существующих объектов в список
     template<class T>
     static void input_command(T* cl) {
         if (cl) {
@@ -33,6 +33,7 @@ public:
         commands.clear();
     }
     
+    //старт логирования
     static void startlog(){
         for (auto* cmd : commands) {
             if (cmd) {
@@ -43,6 +44,9 @@ public:
 };
 std::vector<ToLog*> ConteinerLog::commands;
 
+
+//шаблонный класс для анализа
+//наследует выполнение функций, счетчик циклов и измерение времени выполнения
 template<typename ...Args>
 class IAnalis: public SimpleExect<Args...>,
     public CycleCounter, public ProfilerFunctions
@@ -75,12 +79,15 @@ public:
         ConteinerLog::reset();
     }
 };
+
+//анализ на винде
 template<typename ...Args>
 class WindowAnalis:public IAnalis<Args...>{
 public:
     using IAnalis<Args...>::IAnalis;
 };
 
+//анализ на линуксе
 template<typename ...Args>
 class LinuxAnalis:protected IAnalis<Args...>,
     public ProfilerPerf
@@ -97,6 +104,7 @@ public:
     }
 };
 
+//класс для выбоора реализации в зависимости от операционки
 template<typename ...Args>
 class AnalisFactory:public
     #ifdef _WIN32
