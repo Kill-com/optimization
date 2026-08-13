@@ -6,7 +6,10 @@
 
 #include <filesystem>
 #include <fstream>
-
+/**
+ * @brief Хранение всех иформации info в векторе+его размер, возможность его увелечения инкрементом
+ * 
+ */
 class containerParser{
 private:
     std::vector<std::string> info;
@@ -19,6 +22,10 @@ public:
     void del_el(size_t);
 };
 
+/**
+ * @brief Конкретная реализация для программы, хранение имен методов и имен функций
+ * 
+ */
 class IcontainerParser{
 protected:
     containerParser method;
@@ -32,6 +39,11 @@ public:
     size_t getKeyCount(int);
 };
 
+/**
+ * @brief Интерфейс парсера
+ * 
+ * @tparam T тип значения для парсинга
+ */
 template<typename T>
 class IParser{
 public:
@@ -40,6 +52,10 @@ public:
     virtual ~IParser()=default;
 };
 
+/**
+ * @brief Парсер терминала
+ * 
+ */
 class ParserTerminal:public IParser<char**>, public IcontainerParser{
 private:
     bool for_analis = false;
@@ -51,6 +67,10 @@ public:
     bool parse(int, char**&);
 };
 
+/**
+ * @brief Парсер файла
+ * 
+ */
 class Parser_file:public IParser<std::vector<std::string>>, public IcontainerParser{
     public:
     Parser_file(const IcontainerParser& parent): IcontainerParser(parent){};
