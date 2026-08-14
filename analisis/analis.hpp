@@ -18,6 +18,7 @@
 #include "../container/container.hpp"
 #include "../controller/logger_controller/handler.hpp"
 
+//базовый класс логируемых объектов
 class ToLog{
 public:
     virtual ~ToLog()=default;
@@ -25,11 +26,13 @@ public:
     virtual void reset()=0;
 };
 
+//класс счетчик циклов
 class CycleCounter:public ToLog{
 private:
     uint64_t info=0;
     uint64_t rdtsc();
 public:
+//метод делает из данной функции функцию, измеряющую количество циклов
     template<typename Ret, typename... Args>
     std::function<Ret(Args...)> prof_cycle(std::function<Ret(Args...)>& func) {
         return [this,func](Args... args) -> Ret {
@@ -39,6 +42,7 @@ public:
             return result;
         };
     }
+//перегрузка для указателей на функции
     template<typename Ret, typename... Args>
     std::function<Ret(Args...)> prof_cycle(Ret (*func)(Args...)) {
         return [this,func](Args... args) -> Ret {
@@ -52,10 +56,12 @@ public:
     void tolog();
 };
 
+//класс подсчета кол-ва вызовов функций
 class ProfilerFunctions:public ToLog{
 private:
     inline static uint64_t info=0;
 public:
+//оборачиваем функцию на подсчет вызовов
     template<typename Ret, typename... Args>
     std::function<Ret(Args...)> prof_function(Ret (*func)(Args...)) {
         return [func](Args... args) -> Ret {
@@ -63,18 +69,20 @@ public:
             return func(args...);
         };
     }
+    //вывод в лог
     void tolog(){
         std::stringstream ss;
         ss<<"\n=================================\n"
         <<"Function count: "<<info;
         logger->info(ss.str());
     };
+    //сброс счетчика
     void reset(){
         info=0;
     }
 };
 
-
+//Базовый класс для работы с аппаратными счетчиками производительности
 class ConteinerPerf:public ToLog{
 protected:
     struct Counter_ {
@@ -91,7 +99,8 @@ public:
     void reset(){};
 };
 
-
+// Класс-профилировщик, использующий аппаратные счетчики производительности
+//добавляет методы для управления счетчиками
 class ProfilerPerf:public ConteinerPerf{
 public:
     ProfilerPerf(){}
@@ -106,6 +115,7 @@ public:
             return result;
         };
     }
+//ДЕСТРУКТОР!!!!!!!!! закрывает все дескрипторы счетчиков
     ~ProfilerPerf(){
         std::cout << "=== ProfilerPerf DESTRUCTOR ===" << std::endl;
         std::cout << "  this = " << this << std::endl;
