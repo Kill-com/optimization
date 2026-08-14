@@ -15,7 +15,7 @@ public:
     }
 };
 
-class ConrolTuple{
+class ControlTuple{
 public:
 template<typename T>
 static auto to_tuple(T&& t) {

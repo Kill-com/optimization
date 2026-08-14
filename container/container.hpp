@@ -38,7 +38,7 @@ public:
 };
 template<typename ...Args>
 class ContainerValue:public Icontainer<std::tuple<Args...>>,
-    public ConrolTuple{
+    public ControlTuple{
 public:
     using Icontainer<std::tuple<Args...>>::Icontainer;
 };
