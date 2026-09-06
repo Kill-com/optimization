@@ -6,52 +6,13 @@
 #include "../controller/start_controller/execution.hpp"
 #include "../controller/start_controller/interface.hpp"
 
-class ConteinerLog{
-private:
-    static std::vector<ToLog*> commands;  // Только сырые указатели
-
-public:
-    // Для передачи существующих объектов в список
-    template<class T>
-    static void input_command(T* cl) {
-        if (cl) {
-            commands.push_back(cl);
-        }
-    }
-    
-    // Для создания новых объектов (НЕ ИСПОЛЬЗУЙТЕ С UNIQUE_PTR!)
-    template<class T, typename... Args>
-    static void add_command(Args&&... args) {
-        commands.push_back(new T(std::forward<Args>(args)...));
-    }
-    
-    static void reset(){
-        // ВНИМАНИЕ: Удаляем объекты, если они были созданы через add_command
-        for (auto* cmd : commands) {
-            cmd->reset();
-        }
-        commands.clear();
-    }
-    
-    //старт логирования
-    static void startlog(){
-        for (auto* cmd : commands) {
-            if (cmd) {
-                cmd->tolog();
-            }
-        }
-    }
-};
-std::vector<ToLog*> ConteinerLog::commands;
-
-
 //шаблонный класс для анализа
 //наследует выполнение функций, счетчик циклов и измерение времени выполнения
 template<typename ...Args>
-class IAnalis: public SimpleExect<Args...>,
-    public CycleCounter, public ProfilerFunctions
-{
+class IAnalis: public SimpleExect<Args...>{
 private:
+    std::shared_ptr<CycleCounter> counter;
+    std::shared_ptr<ProfilerFunctions> profiler;
     auto getwrapped(){
         return [this](auto&& ...args){
             return SimpleExect<Args...>::exect(
@@ -60,16 +21,20 @@ private:
         };
     }
 public:
-    using SimpleExect<Args...>::SimpleExect;
+    IAnalis(ContainerValue<Args...>& vl) 
+        : SimpleExect<Args...>(vl),
+          counter(std::make_shared<CycleCounter>()),
+          profiler(std::make_shared<ProfilerFunctions>()) {}
+
     template<typename Method,typename... Func>
     void exect(Method&& method,Func&&... func){
-        ConteinerLog::input_command(static_cast<CycleCounter*>(this));
-        ConteinerLog::input_command(static_cast<ProfilerFunctions*>(this));
+        ConteinerLog::input_command(counter);
+        ConteinerLog::input_command(profiler);
         std::cout<<"start of analisis"<<std::endl;
-        auto method_cycles=prof_cycle(method);
+        auto method_cycles=counter->prof_cycle(method);
         auto methods_funcs=std::make_tuple(
             method_cycles,
-            prof_function(std::forward<Func>(func))...
+            profiler->prof_function(std::forward<Func>(func))...
         );
         std::apply(
             getwrapped(),
@@ -89,16 +54,18 @@ public:
 
 //анализ на линуксе
 template<typename ...Args>
-class LinuxAnalis:protected IAnalis<Args...>,
-    public ProfilerPerf
-{
+class LinuxAnalis:protected IAnalis<Args...>{
+private:
+    std::shared_ptr<ProfilerPerf> perf;
 public:
-    using IAnalis<Args...>::IAnalis;
+    LinuxAnalis(ContainerValue<Args...>& vl) 
+        : IAnalis<Args...>(vl),
+          perf(std::make_shared<ProfilerPerf>()) {}
     template<typename Method,typename... Func>
     void exect(Method&& method,Func&&... func){
-        ConteinerLog::input_command(static_cast<ProfilerPerf*>(this));
+        ConteinerLog::input_command(perf);
         IAnalis<Args...>::exect(
-            prof_perf(method),
+            perf->prof_perf(method),
             std::forward<Func>(func)...
         );
     }

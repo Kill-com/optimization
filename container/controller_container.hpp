@@ -18,7 +18,7 @@ public:
 };
 
 //класс для работы с кортежами
-class ConrolTuple{
+class ControlTuple{
 public:
 template<typename T>
 

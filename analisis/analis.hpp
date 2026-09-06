@@ -17,14 +17,7 @@
 
 #include "../container/container.hpp"
 #include "../controller/logger_controller/handler.hpp"
-
-//базовый класс логируемых объектов
-class ToLog{
-public:
-    virtual ~ToLog()=default;
-    virtual void tolog()=0;
-    virtual void reset()=0;
-};
+#include "../controller/logger_controller/interface.hpp"
 
 //класс счетчик циклов
 class CycleCounter:public ToLog{

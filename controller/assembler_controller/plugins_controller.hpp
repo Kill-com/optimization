@@ -114,7 +114,7 @@ public:
      * @param t Обьект класса который хранить args для вызова метода
      * @param container  Класс вектор который хранит имена вспомогательных функций
      */
-    AssemblerSimple(const T& t,const containerVectorStr& container):
+    AssemblerSimple(T&& t, containerVectorStr& container):
     container_class(t), container_func(container){
         count=container_func.getsize();
     };

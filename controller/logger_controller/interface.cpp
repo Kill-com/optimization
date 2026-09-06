@@ -1,7 +1,10 @@
 
 
-#include "interface.hpp"
 #include <sstream>
+
+#include "interface.hpp"
+std::vector<std::shared_ptr<ToLog>> ConteinerLog::commands;
+
 
 //Реализация LogEvent
  std::string LogEvent::toString() const {

@@ -1,5 +1,6 @@
 #pragma once
-
+#include <memory>
+#include <vector>
 #include <string>
 #include <chrono>
 
@@ -38,4 +39,50 @@ protected:
 public:
     virtual ~LogSubscriber() = default;
     virtual void onLogEvent(const LogEvent&) = 0;
+};
+
+//базовый класс логируемых объектов
+class ToLog{
+public:
+    virtual ~ToLog()=default;
+    virtual void tolog()=0;
+    virtual void reset()=0;
+};
+
+//Класс для логируемых обьектов
+class ConteinerLog{
+private:
+    static std::vector<std::shared_ptr<ToLog>> commands;
+
+public:
+    // Для передачи существующих объектов в список
+    template<class T>
+    static void input_command(std::shared_ptr<T> cl) {
+        if (cl) {
+            commands.push_back(cl);
+        }
+    }
+    
+    // Для создания новых объектов (НЕ ИСПОЛЬЗУЙТЕ С UNIQUE_PTR!)
+    template<class T, typename... Args>
+    static void add_command(Args&&... args) {
+        commands.push_back(std::make_shared<T>(std::forward<Args>(args)...));
+    }
+        
+    static void reset(){
+        // ВНИМАНИЕ: Удаляем объекты, если они были созданы через add_command
+        for (auto& cmd : commands) {
+            cmd->reset();
+        }
+        commands.clear();
+    }
+    
+    //старт логирования
+    static void startlog(){
+        for (auto& cmd : commands) {
+            if (cmd) {
+                cmd->tolog();
+            }
+        }
+    }
 };
