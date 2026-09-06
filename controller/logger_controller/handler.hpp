@@ -17,7 +17,17 @@ public:
     void unsubscribe(LogLevel, std::shared_ptr<LogSubscriber>);
     
     // Публикация события
+    template<auto Name>
+    void log(LogLevel level, const std::string& message){
+        LogEvent event(level, message);
+        event.updatemessage<Name>();
+        notify(level, event);
+    }
     void log(LogLevel, const std::string&);
+    template<auto Name>
+    void info(const std::string& message) {
+        log<Name>(LogLevel::INFO, message);
+    }
     void info(const std::string& message) {
         log(LogLevel::INFO, message);
     }

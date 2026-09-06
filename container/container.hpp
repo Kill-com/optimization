@@ -39,6 +39,12 @@ public:
     IcontainerVector(Args&&...args):Icontainer<std::vector<T>>(std::forward<Args>(args)...){};
 };
 
+template<auto Name>
+class ContainerCount: public Icontainer<int>, public ControlCount<ContainerCount<Name>, Name>{
+public:
+    ContainerCount() : Icontainer<int>(0) {};
+};
+
 //класс для хранения строки
 class containerStr:public Icontainer<std::string>{
 public:

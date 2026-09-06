@@ -3,8 +3,8 @@
 #include <functional>
 #include <cmath>
 #include <iostream>
-// #include <memory>
-
+#include "../../../analisis/macros.hpp"
+#define __analis__ 1
 
 
 namespace gold_sech_name{
@@ -22,9 +22,9 @@ T f(std::function<T(T)> target_f, T a, T b) {
     T x2 = a + TAU*(b-a);
     std::cout<<"a="<<a<<", x1="<< x1<< ", x2="<< x2<<", b="<<b<< std::endl;
 
-    while ((b - a) > EPS) {
-        T x1 = a + (1-TAU)*(b-a);  
-        T x2 = a + TAU*(b-a);
+    WHILE (b-a,[&](T){return b-a>EPS;},{
+        x1 = a + (1-TAU)*(b-a);  
+        x2 = a + TAU*(b-a);
         if (target_f(x1) < target_f(x2)){
             b = x2;
             x2 = x1;
@@ -36,7 +36,7 @@ T f(std::function<T(T)> target_f, T a, T b) {
             x2 = a + TAU*(b-a);  
         }
         std::cout<<"a="<<a<<", x1="<< x1<< ", x2="<< x2<<", b="<<b<< std::endl;
-    } 
+    } );
 
     return(a+ b)/2;
 }

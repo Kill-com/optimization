@@ -1,4 +1,10 @@
 
+
+/**
+ * @brief Пользоваться классом derived через derived_ptr
+ * 
+ * @tparam Derived 
+ */
 template<class Derived>
 class ControlDerived{
 protected:

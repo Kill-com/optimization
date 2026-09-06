@@ -15,6 +15,7 @@
     #include <perfmon/pfmlib_perf_event.h>
 #endif
 
+#include "name_iter.hpp"
 #include "../container/container.hpp"
 #include "../controller/logger_controller/handler.hpp"
 #include "../controller/logger_controller/interface.hpp"
@@ -74,6 +75,64 @@ public:
         info=0;
     }
 };
+
+class EnableControl{
+protected:
+    static inline bool enabled_ = false;
+public:
+    static void setEnabled(bool enabled) {
+        enabled_ = enabled;
+    }
+};
+
+class FORCounter:public EnableControl{
+private:
+    static inline ContainerCount<Iter::FOR_COUNT> count_;
+public:
+    // Метод для обёртки for
+    template<typename T, typename Func>
+    static void forLoop(T start, T end, Func body) {
+        bool stop= false;
+        for (T i = start; i < end && !stop; ++i) {
+            if (enabled_) {
+                ++count_;
+            }
+            body(i, stop);
+        }
+    }
+    static std::shared_ptr<ContainerCount<Iter::FOR_COUNT>> getcount(){
+        return std::make_shared<ContainerCount<Iter::FOR_COUNT>>(count_);
+    }
+    static void reset(){
+        count_.reset();
+    }
+};
+
+class WhileCounter: public EnableControl{
+private:
+    static inline ContainerCount<Iter::WHILE_COUNT> count_;
+public:
+    // Метод для обёртки while
+    template<typename T, typename Cond, typename Body>
+    static void whileLoop(T start, Cond condition, Body body) {
+        T i = start;
+        bool stop= false;
+        while (condition(i)&& !stop) {
+            if (enabled_) {
+                ++count_;
+            }
+            body(i,stop);
+            ++i;
+        }
+    }
+    static std::shared_ptr<ContainerCount<Iter::WHILE_COUNT>> getcount(){
+        return std::make_shared<ContainerCount<Iter::WHILE_COUNT>>(count_);
+    }
+    static void reset(){
+        count_.reset();
+    }
+};
+
 
 //Базовый класс для работы с аппаратными счетчиками производительности
 class ConteinerPerf:public ToLog{

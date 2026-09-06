@@ -19,6 +19,7 @@ void exect(ParserTerminal& parser){
                 st.input_value(1,3);
                 st();
             }else{
+                EnableControl::setEnabled(true);
                 StartCalculation<AnalisFactory,float,float> st(method, args);
                 st.input_value(1,3);
                 st();

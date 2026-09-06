@@ -4,6 +4,8 @@
 #include <string>
 #include <chrono>
 
+#include "../../analisis/name_iter.hpp"
+
 // Типы событий для логирования
 enum class LogLevel {
     INFO,
@@ -24,6 +26,10 @@ public:
     std::chrono::system_clock::time_point getTimestamp() const { return timestamp_; }
     
     std::string toString() const ;
+    template<auto Name>
+    void updatemessage(){
+        message_=how_iter<Name>()+message_;
+    }
 private:
     LogLevel level_;
     std::string message_;
