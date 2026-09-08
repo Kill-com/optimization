@@ -1,4 +1,5 @@
 #include "parsers.hpp"
+#include "../assembler_controller/plugins/enum.hpp"
 
 /**
  * @brief Добавляет в вектор аргумент
@@ -136,7 +137,17 @@ bool ParserTerminal::parse(int argc, char**& argv){
     
     for (int i = 1; i < argc; i++) {
         std::string arg= argv[i];
-        
+        if(arg == "-a"|| arg=="--all"){
+            for (std::string name :methodNames) {
+                arg_method.emplace_back(name);
+                ++method;
+            }
+            for (std::string name :functionNames) {
+                arg_target_function.emplace_back(name);
+                ++target_function;
+            }
+            break;
+        }
         if (arg == "-m" || arg == "--method") {
             currentKey = KEY1;
         } else if (arg == "-f" || arg == "--function") {

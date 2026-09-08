@@ -4,13 +4,15 @@
 // ============================================================
 
 #include <string>
+#include "../to_upper.hpp"
 #include "plugins_controller.hpp"
-#include "plugins/f_list.cpp"
-#include "plugins/porabola.cpp"
-#include "plugins/gold_sech.cpp"
+#include "plugins/plugins_method.hpp"
+#include "plugins/plugins_function.hpp"
+#include "plugins/enum.hpp"
 template<typename T,typename Func>
-void CollectPlug::collect(Func func, const std::string plugin_name) {
-    if (plugin_name == "f_list.cpp") func(f_list<T>());
-    else if (plugin_name == "porabola.cpp") func(porabola<T>());
-    else if (plugin_name == "gold_sech.cpp") func(gold_sech<T>());
-    }
+void CollectPlug::collect(Func func, const std::string name) {
+    switch(PluginsMap[toUpper(name)]){
+    case 2: func(F_LIST_<T>::f_()); break;
+    case 1: func(PORABOLA_<T>::f_()); break;
+    case 0: func(GOLD_SECH_<T>::f_()); break;
+    }}

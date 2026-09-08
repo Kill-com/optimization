@@ -5,6 +5,9 @@
 #include <vector>
 #include <algorithm>
 
+#include "../controller/assembler_controller/plugins/enum.hpp"
+#include "../controller/to_upper.hpp"
+
 // Подключаем filesystem с запасным вариантом для старых компиляторов
 #if __has_include(<filesystem>)
 #  include <filesystem>
@@ -16,30 +19,24 @@
 #  error "Compiler does not support <filesystem>"
 #endif
 
-// Удаление расширения у имени файла
-std::string remove_extension(const std::string& str) {
-    size_t pos = str.find_last_of('.');
-    if (pos != std::string::npos)
-        return str.substr(0, pos);
-    return str;
-}
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <plugin1.cpp> [plugin2.cpp ...]\n";
         return 1;
     }
-    const std::string path_plugins="plugins/";
     // Собираем уникальные имена файлов
     std::vector<std::string> plugins;
     for (int i = 1; i < argc; ++i) {
         fs::path p(argv[i]);
-        plugins.push_back(path_plugins+p.string());
+        plugins.push_back(p.string());
     }
 
     if (plugins.empty()) {
-        std::cerr << "No valid plugin files provided.\n";
-        return 1;
+        plugins.reserve(PluginsMap.size());
+        for (const auto& [name, type] : PluginsMap) {
+            plugins.push_back(name);
+        }
     }
 
     // Генерируем plugins.cpp
@@ -50,34 +47,28 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    file << "// ============================================================\n"
-         << "//  AUTOMATICALLY GENERATED FILE\n"
-         << "//  DO NOT EDIT MANUALLY\n"
-         << "// ============================================================\n\n"
-         << "#include <string>\n"
-         << "#include \"plugins_controller.hpp\"\n";
-
-    // Включаем все переданные файлы
-    for (const auto& p : plugins) {
-        file << "#include \"" << p << "\"\n";
-    }
-
-    file << "template<typename T,typename Func>\n"
-         << "void CollectPlug::collect(Func func, const std::string plugin_name) {\n";
+    file<< "// ============================================================\n"
+        << "//  AUTOMATICALLY GENERATED FILE\n"
+        << "//  DO NOT EDIT MANUALLY\n"
+        << "// ============================================================\n\n"
+        << "#include <string>\n"
+        << "#include \"../to_upper.hpp\"\n"
+        << "#include \"plugins_controller.hpp\"\n"
+        << "#include \"plugins/plugins_method.hpp\"\n"
+        << "#include \"plugins/plugins_function.hpp\"\n"
+        << "#include \"plugins/enum.hpp\"\n"
+        << "template<typename T,typename Func>\n"
+        << "void CollectPlug::collect(Func func, const std::string name) {\n"
+        << "    switch(PluginsMap[toUpper(name)]){\n";
 
     // Генерируем цепочку if-else
     for (size_t i = 0; i < plugins.size(); ++i) {
-        fs::path p(plugins[i]);
-        std::string name = p.stem().string();   // имя без пути и расширения
-        if (i == 0) {
-            file << "    if (plugin_name == \"" << name << ".cpp\") "
-                 << "func(" << name << "<T>());\n";
-        } else {
-            file << "    else if (plugin_name == \"" << name << ".cpp\") "
-                 << "func(" << name << "<T>());\n";
-        }
+        int name = PluginsMap[toUpper(plugins[i])];
+            file << "    case " <<name
+                 << ": func(" << toUpper(plugins[i]) << "_<T>::f_()); "
+                 <<"break;\n";
     }
-    file << "    }\n";
+    file << "    }}\n";
 
     file.close();
     std::cout << "Generated " << output_path << " with " << plugins.size() << " plugin(s).\n";

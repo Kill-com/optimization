@@ -1,19 +1,59 @@
-#define _USE_MATH_DEFINES 
+#pragma once
+
 #include <functional>
-#include <cmath>
-#include <iostream>
+
+#include "macros.hpp"
+
 #include "../../../analisis/macros.hpp"
 
-namespace porabola_name {
-    const float EPS = 1e-6;
-    const float e = M_E; 
+#include "../../../container/method_container.hpp"
 
-    [[maybe_unused]] static float target_f(float x) {
-        return std::pow((x-2), 2) + std::sin(x)*x;
+template<typename T>
+class SimpleSearch:public EPSContainer<T>,
+    public TAUContainer<T>,
+    public EContainer<T>{
+protected:
+    using EPSContainer<T>::EPS;
+    using TAUContainer<T>::TAU;
+    using EContainer<T>::E;
+};
+
+template<typename T>
+class GOLD_SECH_:public SimpleSearch<T>{
+private:
+    using EPSContainer<T>::EPS;
+    using TAUContainer<T>::TAU;
+public:
+    static T f(std::function<T(T)> target_f, T a, T b){
+        T x1 = a + (1-TAU)*(b-a);  
+        T x2 = a + TAU*(b-a);
+
+        WHILE (b-a,[&](T){return b-a>EPS;},{
+            x1 = a + (1-TAU)*(b-a);  
+            x2 = a + TAU*(b-a);
+            if (target_f(x1) < target_f(x2)){
+                b = x2;
+                x2 = x1;
+                x1 = a + (1-TAU)*(x2-a);            
+            }
+            else{
+                a = x1;
+                x1 = x2;
+                x2 = a + TAU*(b-a);  
+            }
+        } );
+
+        return(a+ b)/2;
     }
+    REGISTER_FUNCTION
+};
 
-    template<typename T>
-    T f(std::function<T(T)> target_f, T a, T c) {
+template<typename T>
+class PORABOLA_:public SimpleSearch<T>{
+private:
+    using EPSContainer<T>::EPS;
+public:
+    static T f(std::function<T(T)> target_f, T a, T c) {
         T b = (c + a) / 2;
         T x = b;          
         T b_old = b;   
@@ -66,9 +106,5 @@ namespace porabola_name {
 
         return b;
     }
-}
-
-template<typename T>
-auto porabola() {
-    return &porabola_name::f<T>;
-}
+    REGISTER_FUNCTION
+};
