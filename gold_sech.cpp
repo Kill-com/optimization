@@ -16,13 +16,13 @@ T golden_section(Func f, T a, T b) {
             b = x2;
             x2 = x1;
             fx2 = fx1;
-            x1 = a + (1 - TAU) * (b - a);
+            x1 = a + b - x2;
             fx1 = f(x1);
         } else {
             a = x1;
             x1 = x2;
             fx1 = fx2;
-            x2 = a + TAU * (b - a);
+            x2 = a + b - x1;
             fx2 = f(x2);
         }
         std::cout << "a=" << a << ", x1=" << x1 << ", x2=" << x2 << ", b=" << b << std::endl;
