@@ -3,28 +3,64 @@
 #include <string>
 
 #include "../chek_args_f.hpp"
+#include "../to_upper.hpp"
 #include "../../container/container.hpp"
+#include "plugins/plugins_method.hpp"
+#include "plugins/plugins_function.hpp"
+#include "plugins/enum.hpp"
+#include "run_time_plugins/export.hpp"
 
 /*
-CollectPlug::collect
+CollectPlug::collect_impl
 принимает лямбду функцию и вызывает ее с указаетлем на функцию
 за который отвечает переданный аргумент.
 */
 class CollectPlug{
 protected:
-    /**
-     * @brief Вызывает переданую лямбду с укаазетлем на функцию по ее имени
-     * 
-     * @tparam T Тип для шаблона функций
-     * @tparam Func Лямбда функция для посдующегор вызова
-     */
-    template<typename T,typename Func>
-    void collect(Func, const std::string);
+    // Основной метод - проверяет наличие в map
+    template<typename T, typename Func>
+    void collect_impl(Func func, const std::string plugin) {
+        auto it = PluginsMap.find(toUpper(plugin));
+        
+        if (it != PluginsMap.end()) {
+            // Строка ЕСТЬ в map - вызываем перегрузку для ключа
+            #undef __PARSEMATH__
+            collect<T>(func, plugin);
+        }else {
+            // Строки НЕТ в map - вызываем перегрузку для обычной строки
+            collectFromString<T>(func, plugin);
+        }
+    }
 
-    // template<typename T,typename Func, typename Func_str>
-    // void collect(Func func, Func_str plugin){
-    //     func(plugin);
-    // }
+private:
+    // Перегрузка для случая, когда строка есть в map (ключ)
+    template<typename T, typename Func>
+    static void collect(Func func, const std::string& name) {
+        auto it = PluginsMap.find(toUpper(name));
+        if (it == PluginsMap.end()) {
+            std::cerr << "Plugin not found: " << name << std::endl;
+            return;
+        }
+
+        switch(static_cast<PLUGINS>(it->second)) {
+            #define X(plugin_name) \
+                case PLUGINS::plugin_name: \
+                    func(plugin_name##_<T>::f_()); \
+                    break;
+            PLUGINS_ALL
+            #undef X
+            default:
+                break;
+        }
+    }
+    
+    // Перегрузка для случая, когда строки НЕТ в map (обычная строка)
+    template<typename T, typename Func>
+    void collectFromString(Func func, const std::string& str) {
+        // Обрабатываем как обычную строку
+        MathExpression<T> expr(str);
+        func(expr.f());
+    }
 };
 
 /* 
@@ -51,6 +87,7 @@ private:
     void compiled_simple_impl(PluginProcces&& process, 
                               size_t idx,
                               Funcs_Assembling&&... funcs) {
+        #define __PARSEMATH__
         if (idx >= count) return;
         if constexpr(count_>0){
             if(idx>0){
@@ -67,7 +104,7 @@ private:
                         std::forward<Funcs_Assembling>(funcs)...
                     );
                 };
-                collect<TypeArg>(wrapper, container_func[idx]);
+                collect_impl<TypeArg>(wrapper, container_func[idx]);
                 return; //Выход из рекурсии
             }
             if(idx==0){
@@ -82,7 +119,7 @@ private:
                         std::forward<Funcs_Assembling>(funcs)...
                     );
                 };
-                collect<TypeArg>(wrapper, container_func[idx]);
+                collect_impl<TypeArg>(wrapper, container_func[idx]);
             }
         }
     }   
@@ -99,7 +136,8 @@ protected:
             compiled_simple_impl<
             TypeArg,
             //Получение количества std::function которые принимает метод
-            function_counter<std::decay_t<PluginProcces>>::value
+            count_std_functions_type<PluginProcces>()
+            
             >(
                 std::forward<PluginProcces>(process),
                 count - 1
@@ -132,10 +170,12 @@ protected:
     */
     template<typename TypeArg,typename Next>
     void compiled_complex(Next next, std::string name){
+        #define __PARSEMATH__
         auto wrapper = [&next](auto&& process) {
             next(std::forward<decltype(process)>(process));
         };
-        collect<TypeArg>(wrapper, name);
+        collect_impl<TypeArg>(wrapper, name);
+        #undef __PARSEMATH__
     }
 };
 
@@ -168,6 +208,4 @@ public:
     }
 };
 
-//include автоматически сгенерированого файла
-#include "plugins.tpp"
 

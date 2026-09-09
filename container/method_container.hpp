@@ -1,27 +1,41 @@
-// method_container.hpp
 #pragma once
 #define _USE_MATH_DEFINES 
 #include <cmath>
-#include "container.hpp"
+#include <string>
 
-template<typename T>
-class EPSContainer {
-protected:
-    static inline T EPS = static_cast<T>(1e-6);
-public:
-    static void setEps(T eps_) {
-        EPS = eps_;
-    }
-};
+// ============ ОПРЕДЕЛЕНИЕ ВСЕХ КОНСТАНТ ============
+#define CONSTANTS_LIST \
+    X(EPS, 1e-6, false) \
+    X(TAU, ((std::sqrt(5.0) - 1.0) / 2.0), true) \
+    X(E, M_E, true)
 
-template<typename T>
-class TAUContainer {
-protected:
-    static inline const T TAU = static_cast<T>((std::sqrt(5.0) - 1.0) / 2.0);
-};
+// ============ ЕДИНЫЙ МАКРОС ДЛЯ ГЕНЕРАЦИИ ============
+#define GENERATE_CONSTANT(name, value, is_const) \
+    template<typename T> \
+    class name##Container { \
+    protected: \
+        static inline T name = static_cast<T>(value); \
+    public: \
+        static T get##name() { \
+            return name; \
+        } \
+        /* Добавляем set только если is_const == false */ \
+        template<bool Enable = is_const> \
+        static typename std::enable_if<!Enable, void>::type \
+        set##name(T val) { \
+            name = val; \
+        } \
+    };
 
-template<typename T>
-class EContainer {
-protected:
-    static inline const T E = static_cast<T>(M_E);
+// ============ ГЕНЕРАЦИЯ ENUM ============
+#define X(name, value, is_const) name,
+enum class ConstantName {
+    CONSTANTS_LIST
+    COUNT
 };
+#undef X
+
+// ============ ГЕНЕРАЦИЯ ВСЕХ КЛАССОВ ============
+#define X(name, value, is_const) GENERATE_CONSTANT(name, value, is_const)
+CONSTANTS_LIST
+#undef X

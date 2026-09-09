@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
          << std::endl;
         return 1;
     }
+    parser.input_function("(x-2)^2+sin(x)");
     exect(parser);
     return 0;
 }

@@ -46,6 +46,16 @@ public:
             return result;
         };
     }
+        // 2. Для КОНСТАНТНОЙ ссылки на std::function (НОВОЕ!)
+    template<typename Ret, typename... Args>
+    std::function<Ret(Args...)> prof_cycle(const std::function<Ret(Args...)>& func) {
+        return [this, func](Args... args) -> Ret {
+            info = CycleCounter::rdtsc();
+            auto result = func(args...);
+            info = CycleCounter::rdtsc() - info;
+            return result;
+        };
+    }
     void reset(){};
     void tolog();
 };
@@ -60,9 +70,27 @@ public:
     std::function<Ret(Args...)> prof_function(Ret (*func)(Args...)) {
         return [func](Args... args) -> Ret {
             ++info;
-            return func(args...);
+            return FUNCTION(func,args...);
         };
     }
+    // 2. Для НЕконстантной ссылки на std::function (НОВОЕ!)
+    template<typename Ret, typename... Args>
+    std::function<Ret(Args...)> prof_function(std::function<Ret(Args...)>& func) {
+        return [func](Args... args) -> Ret {
+            ++info;
+            return FUNCTION(func,args...);
+        };
+    }
+    
+    // 3. Для КОНСТАНТНОЙ ссылки на std::function (НОВОЕ!)
+    template<typename Ret, typename... Args>
+    std::function<Ret(Args...)> prof_function(const std::function<Ret(Args...)>& func) {
+        return [func](Args... args) -> Ret {
+            ++info;
+            return FUNCTION(func,args...);
+        };
+    }
+    
     //вывод в лог
     void tolog(){
         std::stringstream ss;

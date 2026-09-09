@@ -32,6 +32,10 @@ protected:
     containerParser target_function;
 public:
     IcontainerParser(): method(containerParser()),target_function(containerParser()){};
+    void input_function(std::string ff){
+        target_function.input_info(ff);
+        ++target_function;
+    }
     IcontainerParser(const IcontainerParser&);
     const std::vector<std::string> getKey(int);
     void del_el(int, size_t);

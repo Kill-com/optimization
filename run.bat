@@ -46,15 +46,6 @@ if %RUN_ONLY%==0 (
     :: Выводим результат
     echo PLUGIN_FILES = !PLUGIN_FILES!
     
-    :: Запускаем make
-    if not "!PLUGIN_FILES!"=="" (
-        if exist support_by_make (
-            echo Running make with ARGS="!PLUGIN_FILES!"
-            cd support_by_make
-            make "ARGS=!PLUGIN_FILES!"
-            cd ..
-        )
-    )
     if not exist build mkdir build
     cd build
 
