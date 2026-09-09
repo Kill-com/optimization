@@ -12,54 +12,62 @@
 #include "done/gradient_calc.h"
 #include "done/grad_descent.h"
 
+// template<typename T>
+// T f(std::vector<T> arg){
+    
+//     return exp(arg[1]*arg[1]/(-4))*sin(arg[0]*2-0.707)*4;
+// }
+
+
 template<typename B>
 B f(std::vector<B> arg){
     //return (4-2.1*arg[0]*arg[0] + 3*arg[0]*arg[0]*arg[0]*arg[0])*arg[0]*arg[0] + arg[1]*arg[0] + (-4+4*arg[1]*arg[1])*arg[1]*arg[1];
     return 4*exp(-arg[1]*arg[1]/4) * sin(2*arg[0]- 1.414);
 }
 
-template<typename A>
-std::vector<A> grad_descent(const std::function<A(std::vector<A>)>& func, std::vector<A> arg, std::vector<std::vector<double>>* history = nullptr){
+template<typename T>
+std::vector<T> grad_descent_Adagrad(std::function<T(std::vector<T>)>& func, std::vector<T> arg, std::vector<std::vector<double>>* history = nullptr){
 
     if (history) history->push_back(arg);
-    std::size_t n = arg.size();
+
+    size_t n = arg.size();
+    size_t iteration = 0;
 
     if(n == 0) return {};
 
-    A ideal = static_cast<A>(1e-4); // условие сходимости
+    T ideal = 1e-4; // условие сходимости 
+    T e = 1e-8;
+    T grad_norm = 1;
 
-    A grad_norm = 1;
-
-    size_t iteration = 0;
+    std::vector<T> s(n, 0.0);
 
     do{
-        
 
-        std::vector<A> grad = gradient_first_step<A>(func, arg);
-        
+        std::vector<T> grad = gradient_first_step<T>(func, arg);
 
-        grad_norm = gradient_norm<A>(grad);
-        
-        if(grad_norm < ideal) break;
+        grad_norm = gradient_norm<T>(grad);
 
-        std::function<A(A)> func_one = [&func, &arg, &grad, &grad_norm](A t){
-            std::vector<A> arg_one_per = arg;
-            for(std::size_t i = 0; i<arg.size(); i++) {arg_one_per[i] = arg_one_per[i] - grad[i]/grad_norm * t;}
+        std::function<T(T)> func_one = [&func, &arg, &grad, &grad_norm](T t){
+            std::vector<T> arg_one_per = arg;
+            for(std::size_t i = 0; i < arg.size(); i++){
+                arg_one_per[i] = arg_one_per[i] - grad[i] / grad_norm * t;
+            }
             return func(arg_one_per);
         };
 
-        
-        std::function<A(A)> line_func(func_one);
-        A a = parabola_method(line_func, bracket_constant<A>(line_func));
-        
+        for(size_t i = 0; i<n; i++){
+            s[i] += grad[i]*grad[i];
+        }
 
-        for(std::size_t i = 0; i<n; i++){
-            arg[i] = arg[i] - a*grad[i]/grad_norm;
+        T a = golden_section<T>(func_one, bracket_phi<T>(func_one));
+
+        for(size_t i = 0; i<n; i++){
+            arg[i] = arg[i] - (a*grad[i])/(e + sqrt(s[i]));
         }
 
         if (history) history->push_back(arg);
         iteration++;
-    }while(grad_norm > ideal);
+    }while(grad_norm > ideal && iteration < 10000);
     std::cout << "Количество итераций: " << iteration << "\n";
     return arg;
 }
@@ -126,7 +134,7 @@ int main(){
         std::cin >> arg[i];
     }
     std::vector<std::vector<double>> history1;
-    std::vector<double> arg_new = grad_descent(func, arg, &history1);
+    std::vector<double> arg_new = grad_descent_Adagrad(func, arg, &history1);
 
     std::cout << "(";
     for(std::size_t i = 0; i<n; i++){

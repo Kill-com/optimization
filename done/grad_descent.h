@@ -1,12 +1,13 @@
+#pragma once
 
 #include <cmath>
 #include <iostream>
 #include <functional>
 #include <vector>
 
-#include "done/bracket_interval.h"
-#include "done/search_min.h"
-#include "done/gradient_calc.h"
+#include "bracket_interval.h"
+#include "search_min.h"
+#include "gradient_calc.h"
 
 
 
