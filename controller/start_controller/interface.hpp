@@ -40,10 +40,10 @@ private:
      */
     auto getwrapped_start(){
         return [](auto&& method, auto&&...args){
-            auto tuple = std::forward_as_tuple(args...);
-            std::cout<<type_name<decltype(method)>()
-            <<"\n"<<
-            type_name<decltype(std::get<0>(tuple))>();
+            // auto tuple = std::forward_as_tuple(args...);
+            // std::cout<<type_name<decltype(method)>()
+            // <<"\n"<<
+            // type_name<decltype(std::get<0>(tuple))>();
             if constexpr (std::is_invocable_v<decltype(method), decltype(args)...>){
                 return method(std::forward<decltype(args)>(args)...);
             }

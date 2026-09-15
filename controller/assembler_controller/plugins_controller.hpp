@@ -24,7 +24,6 @@ protected:
         
         if (it != PluginsMap.end()) {
             // Строка ЕСТЬ в map - вызываем перегрузку для ключа
-            #undef __PARSEMATH__
             collect<T>(func, plugin);
         }else {
             // Строки НЕТ в map - вызываем перегрузку для обычной строки
@@ -87,7 +86,6 @@ private:
     void compiled_simple_impl(PluginProcces&& process, 
                               size_t idx,
                               Funcs_Assembling&&... funcs) {
-        #define __PARSEMATH__
         if (idx >= count) return;
         if constexpr(count_>0){
             if(idx>0){
@@ -170,12 +168,10 @@ protected:
     */
     template<typename TypeArg,typename Next>
     void compiled_complex(Next next, std::string name){
-        #define __PARSEMATH__
         auto wrapper = [&next](auto&& process) {
             next(std::forward<decltype(process)>(process));
         };
         collect_impl<TypeArg>(wrapper, name);
-        #undef __PARSEMATH__
     }
 };
 

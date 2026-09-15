@@ -70,7 +70,7 @@ public:
     std::function<Ret(Args...)> prof_function(Ret (*func)(Args...)) {
         return [func](Args... args) -> Ret {
             ++info;
-            return FUNCTION(func,args...);
+            return func(args...);
         };
     }
     // 2. Для НЕконстантной ссылки на std::function (НОВОЕ!)
@@ -78,7 +78,7 @@ public:
     std::function<Ret(Args...)> prof_function(std::function<Ret(Args...)>& func) {
         return [func](Args... args) -> Ret {
             ++info;
-            return FUNCTION(func,args...);
+            return func(args...);
         };
     }
     
@@ -87,7 +87,7 @@ public:
     std::function<Ret(Args...)> prof_function(const std::function<Ret(Args...)>& func) {
         return [func](Args... args) -> Ret {
             ++info;
-            return FUNCTION(func,args...);
+            return func(args...);
         };
     }
     
