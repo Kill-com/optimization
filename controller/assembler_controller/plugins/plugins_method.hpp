@@ -1,12 +1,22 @@
 #pragma once
 
 #include <functional>
+#include <thread>
 
 #include "../macros/macros.hpp"
 
-#include "../../../analisis/macros.hpp"
 
+#include "../../../analisis/macros.hpp"
 #include "../../../container/method_container.hpp"
+#include "../../controller_thread/Ithread.hpp"
+
+#define USING_ALL\
+    using Base = IMethod<T>;\
+    using Base::logger;\
+    using typename Base::type_var_foo;\
+    using Base::get_result_foo;
+#define LOG_METHOD(...) \
+    logger->template method_log<T>(__VA_ARGS__);
 
 template<typename T>
 class SimpleSearch:public EPSContainer<T>,
@@ -19,7 +29,7 @@ protected:
 };
 
 template<typename Output, typename Input=Output>
-class IMethod{
+class IMethod:public ThreadLOG{
 private:
     template<typename... Args>
     static auto make_map(Args... args) {
@@ -30,6 +40,7 @@ private:
         return map;
     }
 protected:
+    using ThreadLOG::logger;
     using type_SelfWrite_foo =
     std::function<
     std::vector<Output>
@@ -59,9 +70,7 @@ class GOLD_SECH_:public SimpleSearch<T>, protected IMethod<T>{
 private:
     using EPSContainer<T>::EPS;
     using TAUContainer<T>::TAU;
-    using Base = IMethod<T>;
-    using typename Base::type_var_foo; 
-    using Base::get_result_foo;
+    USING_ALL
 public:
     static T f(type_var_foo target_f, T a, T b){
         REPACK(target_f,
@@ -81,6 +90,7 @@ public:
                 x1 = x2;
                 x2 = a + TAU*(b-a);  
             }
+            LOG_METHOD((a+ b)/2)
         } );
         return(a+ b)/2;
     )
@@ -92,9 +102,7 @@ template<typename T>
 class PORABOLA_:public SimpleSearch<T>,protected IMethod<T>{
 private:
     using EPSContainer<T>::EPS;
-    using Base = IMethod<T>;
-    using typename Base::type_var_foo;
-    using Base::get_result_foo;
+    USING_ALL
 public:
     static T f(type_var_foo target_f, T a, T c) {
         REPACK(target_f,
@@ -139,6 +147,7 @@ public:
                         }
                     }
                 }
+                LOG_METHOD(b)
             }
         );
 

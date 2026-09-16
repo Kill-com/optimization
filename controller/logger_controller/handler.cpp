@@ -4,7 +4,6 @@
 
 #include "handler.hpp"
 
-//Реализация Издатель (логгер)
 Logger& Logger::getInstance() {
     if(logger==nullptr){
         logger = new Logger;
@@ -23,30 +22,69 @@ void Logger::unsubscribe(LogLevel level, std::shared_ptr<LogSubscriber> subscrib
     list.erase(std::remove(list.begin(), list.end(), subscriber), list.end());
 }
 
-// Публикация события
-void Logger::log(LogLevel level, const std::string& message) {
-    LogEvent event(level, message);
-    notify(level, event);
+Logger::Logger() {
+    worker_ = std::thread([this] { worker_loop(); });
 }
-void Logger::notify(LogLevel level, const LogEvent& event) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    
-    // Уведомляем подписчиков на этом уровне
-    auto it = subscribers_.find(level);
-    if (it != subscribers_.end()) {
-        for (auto& subscriber : it->second) {
-            if (subscriber) {
-                subscriber->onLogEvent(event);
-            }
-        }
+
+Logger::~Logger() {
+    {
+        std::lock_guard<std::mutex> lk(queue_mutex_);
+        stopping_ = true;
     }
-    
-    // Уведомляем подписчиков на всех уровнях (если нужны)
-    it = subscribers_.find(LogLevel::DEBUG); // DEBUG как уровень для всех
-    if (it != subscribers_.end()) {
-        for (auto& subscriber : it->second) {
-            if (subscriber) {
-                subscriber->onLogEvent(event);
+    queue_cv_.notify_all();
+    if (worker_.joinable()) worker_.join();
+}
+
+void Logger::enqueue(Task t) {
+    {
+        std::lock_guard<std::mutex> lk(queue_mutex_);
+        if (stopping_) return;
+        queue_.push(std::move(t));
+        in_flight_.fetch_add(1, std::memory_order_relaxed);
+    }
+    queue_cv_.notify_one();
+}
+
+void Logger::worker_loop() {
+    while (true) {
+        Task task;
+        {
+            std::unique_lock<std::mutex> lk(queue_mutex_);
+            queue_cv_.wait(lk, [this] { return stopping_ || !queue_.empty(); });
+            if (stopping_ && queue_.empty()) return;
+            task = std::move(queue_.front());
+            queue_.pop();
+        }
+        try { task(); } catch (...) { /* ... */ }
+        in_flight_.fetch_sub(1, std::memory_order_relaxed);
+        queue_cv_.notify_all();          // разбудить flush
+    }
+}
+
+void Logger::flush() {
+    std::unique_lock<std::mutex> lk(queue_mutex_);
+    queue_cv_.wait(lk, [this] {
+        return queue_.empty()
+            && in_flight_.load(std::memory_order_relaxed) == 0;
+    });
+}
+
+void Logger::notify(LogLevel level, const LogEvent& event) {
+    std::vector<std::shared_ptr<LogSubscriber>> snapshot;
+    {
+        std::lock_guard<std::mutex> lk(mutex_);
+        auto it = subscribers_.find(level);
+        if (it == subscribers_.end()) return;
+        snapshot = it->second;   // копия shared_ptr — дёшево
+    }
+    for (auto& sub : snapshot) {
+        if (sub) {
+            try { sub->update(event); }
+            catch (const std::exception& e) {
+                std::cerr << "Subscriber error: " << e.what() << std::endl;
+            }
+            catch (...) {
+                std::cerr << "Subscriber unknown error" << std::endl;
             }
         }
     }

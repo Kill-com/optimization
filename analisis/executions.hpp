@@ -24,7 +24,9 @@ public:
     IAnalis(ContainerValue<Args...>& vl) 
         : SimpleExect<Args...>(vl),
           counter(std::make_shared<CycleCounter>()),
-          profiler(std::make_shared<ProfilerFunctions>()) {}
+          profiler(std::make_shared<ProfilerFunctions>()) {
+            EnableControl::setEnabled(true);
+          }
 
     template<typename Method,typename... Func>
     void exect(Method&& method,Func&&... func){

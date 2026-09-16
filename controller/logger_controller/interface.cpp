@@ -17,9 +17,6 @@ std::vector<std::shared_ptr<ToLog>> ConteinerLog::commands;
 std::string LogEvent::levelToString(LogLevel level) {
     switch(level) {
         case LogLevel::INFO: return "INFO";
-        case LogLevel::WARNING: return "WARNING";
-        case LogLevel::ERROR: return "ERROR";
-        case LogLevel::DEBUG: return "DEBUG";
         default: return "UNKNOWN";
     }
 }

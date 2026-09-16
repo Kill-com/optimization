@@ -3,28 +3,33 @@
 #include <fstream>
 #include <iostream>
 
+#include "../controller_thread/GUI_controller.hpp"
+
 #include "interface.hpp"
 
-// Команда реализации логирования в косоли
+// Команда реализации логирования в консоли
 class ConsoleLogCommand : public LogSubscriber {
 public:
-    void onLogEvent(const LogEvent& event){
-        std::cout << "[CONSOLE] " << getTimestamp() << " - " << event.toString() << std::endl;
-    }
+    void update(const LogEvent& event) override;
 };
 
 // Команда реализации логирования в файл
-class FileLogCommand : public LogSubscriber{
+class FileLogCommand : public LogSubscriber {
 public:
-    FileLogCommand(const std::string& filename):file(filename, std::ios::app){};
-    // Реализация файла
-    void onLogEvent(const LogEvent& event){
-        // Реализация записи в файл
-        if (file.is_open()) {
-            file << "[FILE] " << getTimestamp() << " - " << event.toString() << std::endl;
+    explicit FileLogCommand(const std::string& filename)
+        : file(filename, std::ios::app) {
+        if (!file.is_open()) {
+            throw std::runtime_error("FileLogCommand: cannot open " + filename);
         }
     }
-    
+
+    void update(const LogEvent& event) override;
+
 private:
     std::ofstream file;
+};
+
+class GUILogCommand : public LogSubscriber {
+public:
+    void update(const LogEvent& event) override;
 };

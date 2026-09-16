@@ -51,7 +51,7 @@ public:
      * @brief Вызывает метод с его функциями и аргументами
      * 
      */
-    void operator()(){
+    void exect(){
         StartPlug<Classes<Args...>> startplug(value, target_function);
         std::string method_name = method;
         startplug.template start_plug<FirstType>(method_name);

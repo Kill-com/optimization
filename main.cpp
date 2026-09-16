@@ -2,6 +2,7 @@
 #include "controller/start_controller/execution.hpp"
 #include "controller/input_controller/parsers.hpp"
 #include "controller/logger_controller/logger.hpp"
+#include "controller/controller_thread/exect_controller.hpp"
 #include "analisis/executions.hpp"
 
 void exect(ParserTerminal& parser){
@@ -15,14 +16,11 @@ void exect(ParserTerminal& parser){
             logger->info(ss.str());
             std::initializer_list<std::string> args = {function};
             if(parser.get_for_analis()){
-                StartCalculation<SimpleExect,float,float> st(method, args);
-                st.input_value(1,3);
-                st();
+                ExectControl<SimpleExect,float,float> st(method, args);
+                st.exect(1,3);
             }else{
-                EnableControl::setEnabled(true);
-                StartCalculation<AnalisFactory,float,float> st(method, args);
-                st.input_value(1,3);
-                st();
+                ExectControl<AnalisFactory,float,float> st(method, args);
+                st.exect(1,3);
 
             }
         }
@@ -34,6 +32,7 @@ int main(int argc, char* argv[]) {
     auto fileSub = std::make_shared<FileLogCommand>("app.log");
     logger->subscribe(LogLevel::INFO, consoleSub);
     logger->subscribe(LogLevel::INFO, fileSub);
+    //Тут подписка на GUI
     ParserTerminal parser;
     if (!parser.parse(argc, argv)) {
         std::cerr << "Use the -f or -function key to enter --function files"
@@ -52,5 +51,6 @@ int main(int argc, char* argv[]) {
     // std::cin>>foo;
     // parser.input_function("(x1-2)^2+sin(x1)");
     exect(parser);
+    logger->flush();
     return 0;
 }
