@@ -120,14 +120,12 @@ public:
                 T znam = (c - b) * get_result_foo(target_f_,a) + (a - c) * get_result_foo(target_f_,b) + (b - a) * get_result_foo(target_f_,c);
                 
                 if (std::abs(znam) < 1e-12) {
-                    std::cout << "Вырожденная парабола, выход из цикла\n";
                     BREAK;  // ← Выход из цикла
                 } else {
                     x = -0.5 * (((get_result_foo(target_f_,b) - get_result_foo(target_f_,a)) * (c - a) * (c - b) -
                                 (a + b) * ((c - b) * get_result_foo(target_f_,a) + (a - c) * get_result_foo(target_f_,b) + (b - a) * get_result_foo(target_f_,c))) / znam);
 
                     if (x <= a || x >= c) {
-                        std::cout << "x выходит за границы, выход из цикла\n";
                         BREAK;  // ← Выход из цикла
                     } else {
                         if (get_result_foo(target_f_ , x) < get_result_foo(target_f_, b)) {
@@ -150,9 +148,6 @@ public:
                 LOG_METHOD(b)
             }
         );
-
-        std::cout << "Количество итераций: " << WhileCounter::getcount()->getinfo() << std::endl;
-
         return b;
     )
     }

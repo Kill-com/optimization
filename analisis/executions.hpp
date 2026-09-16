@@ -34,7 +34,6 @@ public:
         ConteinerLog::input_command(profiler);
         ConteinerLog::input_command(WhileCounter::getcount());
         ConteinerLog::input_command(FORCounter::getcount());
-        std::cout<<"start of analisis"<<std::endl;
         auto method_cycles=counter->prof_cycle(method);
         auto methods_funcs=std::make_tuple(
             method_cycles,
