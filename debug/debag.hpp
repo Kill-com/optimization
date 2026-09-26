@@ -1,3 +1,5 @@
+#pragma once
+
 #include <typeinfo>
 #include <cxxabi.h>  // для demangling
 #include <cstdlib>

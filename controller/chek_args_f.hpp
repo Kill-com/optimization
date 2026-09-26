@@ -59,3 +59,14 @@ template<typename Func>
 constexpr int count_std_functions_type() {
     return function_counter<std::decay_t<Func>>::value;
 }
+
+template<typename T, typename = void>
+struct is_streamable : std::false_type {};
+
+template<typename T>
+struct is_streamable<T, std::void_t<decltype(
+    std::declval<std::ostream&>() << std::declval<const T&>()
+)>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_streamable_v = is_streamable<T>::value;

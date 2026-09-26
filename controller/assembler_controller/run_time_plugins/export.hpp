@@ -4,8 +4,9 @@
 #include <type_traits>
 
 // Шаблонный класс для работы с выражениями
-template<typename T>
+template<typename U>
 class MathExpression {
+    using T=scalar_of_t<U>;
 public:
     MathExpression(const std::string& expr) {
         auto parsed = ExpressionProcessor::parse(expr);
