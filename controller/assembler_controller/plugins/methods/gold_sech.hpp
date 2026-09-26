@@ -15,7 +15,7 @@ public:
         T x1 = a + (1-TAU)*(b-a);  
         T x2 = a + TAU*(b-a);
 
-        WHILE (b-a,[&](T){return b-a>EPS;},{
+        WHILE (b-a,[&](int i){return b-a>EPS;},{
             x1 = a + (1-TAU)*(b-a);  
             x2 = a + TAU*(b-a);
             if (get_result_foo(target_f_, x1) < get_result_foo(target_f_, x2)){

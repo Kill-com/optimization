@@ -7,7 +7,7 @@
 #include "../includes.hpp"
 
 #define WHILE_BRACKET(kef) \
-    WHILE(0, [&](T f1, T f2){return f1 > f2;},{\
+    WHILE(0, [&](int i){return f1 > f2;},{\
         h *= kef;\
         t0 = t1;\
         t1 = t2;\
@@ -121,7 +121,7 @@ public:
             T t2 = t1 + h;
             T f2 = get_result_foo(f_,t2);
     
-            WHILE(0, [&](T f1, T f2){ return f1 >= f2; }, {
+            WHILE(0, [&](int i){ return f1 >= f2; }, {
                 t0 = t1;
                 f0 = f1;
                 t1 = t2;

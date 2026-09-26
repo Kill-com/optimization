@@ -8,7 +8,6 @@ public:
     using IExect<Args...>::IExect;
     template<typename... Func>
     void exect(Func&&... func){
-        std::cout<<"\nPIZDA2 ";
 
         this->unpacking_tuple(
             this->value.getinfo(),

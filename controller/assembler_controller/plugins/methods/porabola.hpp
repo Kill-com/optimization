@@ -17,7 +17,7 @@ public:
 
         // Используем WHILE с поддержкой BREAK
         WHILE (0,
-            [&](T) { 
+            [&](int i) { 
                 return (c - a) > EPS || std::abs(get_result_foo(target_f_,b) - get_result_foo(target_f_,b_old)) > EPS; 
             },
             {

@@ -31,7 +31,7 @@ public:
         U grad_norm = 1;
         std::pair<U,U> p;
         REPACK(func, T,
-            WHILE(0, [&](auto i){return grad_norm > EPS;},{
+            WHILE(0, [&](int i){return grad_norm > EPS;},{
                 FOR(0, n,{
                     nest_arg[i] = arg[i] + B*v[i];
                 });
@@ -55,6 +55,7 @@ public:
                 });
                 LOG_METHOD(arg)
             });
+            LOG_METHOD(arg)
             return arg;
         )
     }

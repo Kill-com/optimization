@@ -106,7 +106,6 @@ private:
             // чем функций у метода) — вызываем exect с тем, что есть.
             if (idx == 0) {
                 // Собираем единственную оставшуюся функцию и вызываем exect
-        std::cout<<"\nPIZDA";
 
                 auto wrapper = [this, process, &funcs...](auto&& wrapped_args, auto&& /*num_funcs*/){
                     this->container_class.exect(process,
@@ -117,7 +116,6 @@ private:
                 collect_impl<TypeArg>(wrapper, container_func[0]);
                 return;
             }
-        std::cout<<"\nPIZDA332";
 
             /**
              * @brief лямбда вызова compiled_simple_impl
@@ -147,7 +145,6 @@ private:
              */
             auto wrapper = [this, process, &funcs...](auto&& wrapped_args, auto&& /*num_funcs*/){
                 // Финальный вызов
-        std::cout<<"\nPIZDA333";
 
                 this->container_class.exect(process,
                     std::forward<decltype(wrapped_args)>(wrapped_args),
@@ -175,7 +172,7 @@ protected:
         // N — compile-time, поэтому можно инстанцировать шаблон compiled_simple_impl<TypeArg, N>.
         // Стартовый idx = min(count, N) - 1, где count — runtime-число имён в container_func.
         // Если N == 0 — у метода нет std::function-аргументов, вызываем exect сразу.
-        std::cout<<"\n"<<N<<":"<<count;
+        // std::cout<<"\n"<<N<<":"<<count;
         if constexpr (N > 0) {
             if (count > 0) {
                 compiled_simple_impl<
