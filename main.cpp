@@ -45,12 +45,17 @@ int main(int argc, char* argv[]) {
          <<'\n'
          <<"Use the -s key if you want to solve your problem without analysis."
          << std::endl;
-        return 1;
+        // return 1;
     }
     // std::string foo;
     // std::cin>>foo;
     // parser.input_function("(x1-2)^2+sin(x1)");
-    exect(parser);
+    // exect(parser);
+    std::vector<float> i = {1,3};
+    std::vector<std::string> n = {"INTRESTIN_F", "SECONDSTEP", "gold_sech", "BRACKETTAU3"};
+    ExectControl<AnalisFactory,std::vector<float>> st("GRADNESTEROV", n);
+    st.exect(std::move(i));
+    // exect(parser);
     logger->flush();
     return 0;
 }

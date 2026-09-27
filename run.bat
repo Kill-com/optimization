@@ -50,8 +50,8 @@ if %RUN_ONLY%==0 (
     cd build
 
     :: Собираем основную программу и генератор
-    cmake -G "MinGW Makefiles" .. || exit /b 1
-    cmake --build .
+    cmake -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER_LAUNCHER=ccache .. || exit /b 1
+    cmake --build . --parallel
 
     if !ERRORLEVEL! neq 0 (
         exit /b %ERRORLEVEL%

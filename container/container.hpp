@@ -28,15 +28,19 @@ public:
 //класс, хранящий вектор элементов типа Т
 //наследует базовые методы контейнера и методы работы с векторами
 template<typename T>
-class IcontainerVector:public Icontainer<std::vector<T>>,
-    public ControlVector<IcontainerVector,T>{
+class IcontainerVector : public Icontainer<std::vector<T>>,public ControlVector<IcontainerVector,T> {
 public:
-//конструктор для готового вектора
-    IcontainerVector(std::vector<T> info):
-    Icontainer<std::vector<T>>(info){};
-//конструктор для создания вектора поэлементно (переменное число аргументов)
-    template<typename ...Args>
-    IcontainerVector(Args&&...args):Icontainer<std::vector<T>>(std::forward<Args>(args)...){};
+    IcontainerVector(std::vector<T> info)
+        : Icontainer<std::vector<T>>(std::move(info)) {}
+
+    // Для списка элементов
+    IcontainerVector(std::initializer_list<T> init)
+        : Icontainer<std::vector<T>>(std::vector<T>(init)) {}
+
+    // Для одного аргумента
+    template<typename U, typename = std::enable_if_t<std::is_convertible_v<U, T>>>
+    IcontainerVector(U&& u)
+        : Icontainer<std::vector<T>>(std::vector<T>{std::forward<U>(u)}) {}
 };
 
 template<auto Name>

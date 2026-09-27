@@ -117,10 +117,10 @@ private:
     static inline ContainerCount<Iter::FOR_COUNT> count_;
 public:
     // Метод для обёртки for
-    template<typename T, typename Func>
-    static void forLoop(T start, T end, Func body) {
+    template<typename T,typename U, typename Func>
+    static void forLoop(T start, U end, Func body) {
         bool stop= false;
-        for (T i = start; i < end && !stop; ++i) {
+        for (auto i = start; static_cast<U>(i) < end && !stop; ++i) {
             if (enabled_) {
                 ++count_;
             }
@@ -143,11 +143,15 @@ public:
     template<typename T, typename Cond, typename Body>
     static void whileLoop(T start, Cond condition, Body body) {
         T i = start;
-        bool stop= false;
-        while (condition(i)&& !stop) {
-            if (enabled_) {
-                ++count_;
+        bool stop = false;
+        while (true) {
+            bool cont;
+            if constexpr (std::is_invocable_v<Cond, T>) {
+                cont = condition(i);
+            } else {
+                cont = condition(i, i);   // fallback
             }
+            if (!cont || stop) break;
             body(i,stop);
             ++i;
         }

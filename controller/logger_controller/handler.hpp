@@ -11,7 +11,9 @@
 #include <atomic>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
+#include "../chek_args_f.hpp"
 #include "logger.hpp"
 
 class Logger {
@@ -52,7 +54,19 @@ public:
     void method_log(T message) {
         enqueue([this, message]() {
             std::ostringstream os;
-            os << message;
+             if constexpr (is_streamable_v<T>) {
+                os << message;
+            } else {
+                // fallback: печатаем поэлементно в квадратных скобках
+                os << "[";
+                bool first = true;
+                for (const auto& v : message) {
+                    if (!first) os << " ";
+                    os << v;
+                    first = false;
+                }
+                os << "]";
+            }
             // Копируем строку — она переживёт выход из метода
             notify(LogLevel::INFO, LogEvent(LogLevel::INFO, os.str()));
         });
