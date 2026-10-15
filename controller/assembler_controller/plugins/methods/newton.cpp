@@ -1,97 +1,61 @@
 #pragma once
-
 #include "includes.hpp"
 
 template<typename U>
-class NEWTON_: public SimpleSearch<scalar_of_t<U>>, protected IMethod<scalar_of_t<U>>{
+class NEWTON_: public SimpleSearch<scalar_of_t<U>>,
+               protected IMethod<scalar_of_t<U>, U>{
 private:
     using T = scalar_of_t<U>;
-    USING_ALL(T)
-
+    USING_ALL(T, U)
     using Point = std::vector<T>;
-    using Matrix = std::vector<std::vector<T>>;
-
-    static T norm(const Point& x) {
-        T sum = 0.0;
-        for (T v : x) {
-            sum += v * v;
-        }
-        return std::sqrt(sum);
-    }
-
-    static T rosenbrock(const Point& x) {
-        return std::pow(1 - x[0], 2)
-             + 100 * std::pow(x[1] - x[0] * x[0], 2);
-    }
-
-    static Point rosenbrock_grad(const Point& x) {
-        Point g(2);
-        g[0] = -2 * (1 - x[0]) - 400 * x[0] * (x[1] - x[0] * x[0]);
-        g[1] = 200 * (x[1] - x[0] * x[0]);
-        return g;
-    }
-
-    static Matrix rosenbrock_hessian(const Point& x) {
-        Matrix H(2, std::vector<T>(2));
-        H[0][0] = 2 - 400 * x[1] + 1200 * x[0] * x[0];
-        H[0][1] = -400 * x[0];
-        H[1][0] = -400 * x[0];
-        H[1][1] = 200;
-        return H;
-    }
-
-    static Point solve_system(const Matrix& H, const Point& g) {
-        Point d(2);
-        T a = H[0][0];
-        T b = H[0][1];
-        T c = H[1][0];
-        T e = H[1][1];
-        T det = a * e - b * c;
-        d[0] = (-g[0] * e + b * g[1]) / det;
-        d[1] = (-a * g[1] + c * g[0]) / det;
-        return d;
-    }
-
-    static Point newton_method(
-        std::function<T(const Point&)> f,
-        std::function<Point(const Point&)> grad,
-        std::function<Matrix(const Point&)> hessian,
-        Point start,
-        T tol = 1e-8,
-        int max_iter = 1000
-    ) {
-        Point x = start;
-        for (int iter = 0; iter < max_iter; iter++) {
-            Point g = grad(x);
-            if (norm(g) < tol) {
-                break;
-            }
-            Matrix H = hessian(x);
-            Point d = solve_system(H, g);
-            for (size_t i = 0; i < x.size(); i++) {
-                x[i] += d[i];
-            }
-
-            LOG_METHOD(f(x));
-        }
-        return x;
-    }
+    using Mat   = std::vector<std::vector<T>>;
 
 public:
-    static T f(type_var_foo target_f, T a, T b) {
-        (void)target_f;
+    static T f(type_var_foo target_f, U arg){
         REPACK(target_f, T,
-            (void)target_f_;
-            Point start = {a, b};
-            Point result = newton_method(
-                rosenbrock,
-                rosenbrock_grad,
-                rosenbrock_hessian,
-                start,
-                1e-8,
-                1000
-            );
-            return rosenbrock(result);
+            auto eval = [&](const Point& p) -> T {
+                return get_result_foo(target_f_, p);
+            };
+            auto grad_at = [&](const Point& p) -> Point {
+                const T h = static_cast<T>(1e-6);
+                T f0 = eval(p);
+                Point g(2);
+                Point pp = p; pp[0] += h; g[0] = (eval(pp) - f0) / h;
+                pp = p;       pp[1] += h; g[1] = (eval(pp) - f0) / h;
+                return g;
+            };
+            auto hess_at = [&](const Point& p) -> Mat {
+                const T h = static_cast<T>(1e-4);
+                T f0 = eval(p);
+                Point px = {p[0]+h, p[1]}, mx = {p[0]-h, p[1]};
+                Point py = {p[0], p[1]+h}, my = {p[0], p[1]-h};
+                T fxx = (eval(px) - 2*f0 + eval(mx)) / (h*h);
+                T fyy = (eval(py) - 2*f0 + eval(my)) / (h*h);
+                T fp = eval(Point{p[0]+h, p[1]+h});
+                T fm = eval(Point{p[0]+h, p[1]-h});
+                T gp = eval(Point{p[0]-h, p[1]+h});
+                T gm = eval(Point{p[0]-h, p[1]-h});
+                T fxy = (fp - fm - gp + gm) / (4*h*h);
+                return {{fxx, fxy}, {fxy, fyy}};
+            };
+            auto nrm = [](const Point& v){ return std::sqrt(v[0]*v[0] + v[1]*v[1]); };
+
+            Point x = {static_cast<T>(arg[0]), static_cast<T>(arg[1])};
+
+            FOR(0, 1000, {
+                Point g = grad_at(x);
+                if (nrm(g) < static_cast<T>(1e-8)) BREAK;
+                Mat H = hess_at(x);
+                T det = H[0][0]*H[1][1] - H[0][1]*H[1][0];
+                if (std::fabs(det) < 1e-12) BREAK;
+                Point d;
+                d.push_back((-g[0]*H[1][1] + H[0][1]*g[1]) / det);
+                d.push_back((-H[0][0]*g[1] + H[1][0]*g[0]) / det);
+                x[0] += d[0];
+                x[1] += d[1];
+                LOG_METHOD(eval(x));
+            });
+            return eval(x);
         );
     }
     REGISTER_FUNCTION
