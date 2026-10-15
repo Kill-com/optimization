@@ -1,53 +1,44 @@
 #pragma once
-
 #include "includes.hpp"
 
 template<typename U>
-class BARRIER_:public SimpleSearch<scalar_of_t<U>>, protected IMethod<scalar_of_t<U>>{
+class BARRIER_: public SimpleSearch<scalar_of_t<U>>,
+                protected IMethod<scalar_of_t<U>, U>{
 private:
-    using T=scalar_of_t<U>;
-    USING_ALL(T)
-
-    static T function_target(T x, T y){
-        return x*x + y*y;
-    }
-
-    static T barrier_function(T x, T y, T mu){
-        return function_target(x, y) - mu * log(x + y - 1);
-    }
-
-    static void gradient(T x, T y, T mu, T& gx, T& gy){
-        T t = x + y - 1;
-        gx = 2*x - mu / t;
-        gy = 2*y - mu / t;
-    }
+    using T = scalar_of_t<U>;
+    USING_ALL(T, U)
+    using Point = std::vector<T>;
 
 public:
-    static T f(type_var_foo target_f, T a, T b){
-        (void)target_f;
+    static T f(type_var_foo target_f, U arg){
         REPACK(target_f, T,
-            (void)target_f_;
+            auto eval = [&](const Point& p) -> T {
+                return get_result_foo(target_f_, p);
+            };
+            auto grad_at = [&](const Point& p) -> Point {
+                const T h = static_cast<T>(1e-6);
+                T f0 = eval(p);
+                Point g(2);
+                Point pp = p; pp[0] += h; g[0] = (eval(pp) - f0) / h;
+                pp = p;       pp[1] += h; g[1] = (eval(pp) - f0) / h;
+                return g;
+            };
 
-            T x = a;
-            T y = b;
+            T x = static_cast<T>(arg[0]);
+            T y = static_cast<T>(arg[1]);
+            T mu = 1, beta = 0.5, alpha = 0.01;
 
-            T mu    = 1.0;
-            T beta  = 0.5;
-            T alpha = 0.01;
-
-            for(int k = 0; k < 10; k++){
-
-                for(int i = 0; i < 500; i++){
-                    T gx, gy;
-                    gradient(x, y, mu, gx, gy);
-                    x -= alpha * gx;
-                    y -= alpha * gy;
-                }
-
-                LOG_METHOD(function_target(x, y));
-            }
-
-            return function_target(x, y);
+            FOR(0, 10, {
+                FOR(0, 500, {
+                    Point g = grad_at(Point{x, y});
+                    T t = x + y - 1;
+                    x -= alpha * (g[0] - mu / t);
+                    y -= alpha * (g[1] - mu / t);
+                });
+                LOG_METHOD(eval(Point{x, y}));
+                mu *= beta;
+            });
+            return eval(Point{x, y});
         );
     }
     REGISTER_FUNCTION
