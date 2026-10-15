@@ -1,131 +1,62 @@
 #pragma once
-
 #include "includes.hpp"
 
 template<typename U>
-class CONJUGATE_GRAD_: public SimpleSearch<scalar_of_t<U>>, protected IMethod<scalar_of_t<U>>{
+class CONJUGATE_GRAD_: public SimpleSearch<scalar_of_t<U>>,
+                       protected IMethod<scalar_of_t<U>, U>{
 private:
     using T = scalar_of_t<U>;
-    USING_ALL(T)
-
+    USING_ALL(T, U)
     using Point = std::vector<T>;
 
-    static T norm(const Point& x) {
-        T sum = 0.0;
-        for (T v : x) {
-            sum += v * v;
-        }
-        return std::sqrt(sum);
-    }
-
-    static T dot(const Point& a, const Point& b) {
-        T sum = 0.0;
-        for (size_t i = 0; i < a.size(); i++) {
-            sum += a[i] * b[i];
-        }
-        return sum;
-    }
-
-    static T rosenbrock(const Point& x) {
-        return std::pow(1 - x[0], 2)
-             + 100 * std::pow(x[1] - x[0] * x[0], 2);
-    }
-
-    static Point rosenbrock_grad(const Point& x) {
-        Point g(2);
-        g[0] = -2 * (1 - x[0]) - 400 * x[0] * (x[1] - x[0] * x[0]);
-        g[1] = 200 * (x[1] - x[0] * x[0]);
-        return g;
-    }
-
-    static T line_search(
-        std::function<T(const Point&)> f,
-        std::function<Point(const Point&)> grad,
-        const Point& x,
-        const Point& d,
-        T alpha = 1.0,
-        T beta = 1e-4,
-        T rho = 0.5
-    ) {
-        T fx = f(x);
-        Point g = grad(x);
-        T gtd = dot(g, d);
-        Point x_new(x.size());
-        while (true) {
-            for (size_t i = 0; i < x.size(); i++) {
-                x_new[i] = x[i] + alpha * d[i];
-            }
-            if (f(x_new) <= fx + beta * alpha * gtd) {
-                break;
-            }
-            alpha *= rho;
-            if (alpha < 1e-12) {
-                break;
-            }
-        }
-        return alpha;
-    }
-
-    static Point conjugate_gradient(
-        std::function<T(const Point&)> f,
-        std::function<Point(const Point&)> grad,
-        Point start,
-        T tol = 1e-8,
-        int max_iter = 1000
-    ) {
-        Point x = start;
-        Point g = grad(x);
-        Point d(x.size());
-        for (size_t i = 0; i < x.size(); i++) {
-            d[i] = -g[i];
-        }
-
-        for (int iter = 0; iter < max_iter; iter++) {
-            if (norm(g) < tol) {
-                break;
-            }
-
-            T alpha = line_search(f, grad, x, d);
-            Point x_new = x;
-            for (size_t i = 0; i < x.size(); i++) {
-                x_new[i] += alpha * d[i];
-            }
-
-            Point g_new = grad(x_new);
-            Point diff(x.size());
-            for (size_t i = 0; i < x.size(); i++) {
-                diff[i] = g_new[i] - g[i];
-            }
-
-            T beta = dot(g_new, diff) / dot(g, g);
-            if (beta < 0) beta = 0;
-
-            for (size_t i = 0; i < x.size(); i++) {
-                d[i] = -g_new[i] + beta * d[i];
-            }
-
-            x = x_new;
-            g = g_new;
-
-            LOG_METHOD(f(x));
-        }
-        return x;
-    }
-
 public:
-    static T f(type_var_foo target_f, T a, T b) {
-        (void)target_f;
+    static T f(type_var_foo target_f, U arg){
         REPACK(target_f, T,
-            (void)target_f_;
-            Point start = {a, b};
-            Point result = conjugate_gradient(
-                rosenbrock,
-                rosenbrock_grad,
-                start,
-                1e-8,
-                1000
-            );
-            return rosenbrock(result);
+            auto eval = [&](const Point& p) -> T {
+                return get_result_foo(target_f_, p);
+            };
+            auto grad_at = [&](const Point& p) -> Point {
+                const T h = static_cast<T>(1e-6);
+                T f0 = eval(p);
+                Point g(2);
+                Point pp = p; pp[0] += h; g[0] = (eval(pp) - f0) / h;
+                pp = p;       pp[1] += h; g[1] = (eval(pp) - f0) / h;
+                return g;
+            };
+            auto dot = [](const Point& a, const Point& b){
+                T s = 0; for(size_t i=0;i<a.size();++i) s += a[i]*b[i]; return s;
+            };
+            auto nrm = [&](const Point& v){ return std::sqrt(dot(v,v)); };
+
+            Point x = {static_cast<T>(arg[0]), static_cast<T>(arg[1])};
+            Point g = grad_at(x);
+            Point d = {-g[0], -g[1]};
+
+            FOR(0, 1000, {
+                if (nrm(g) < static_cast<T>(1e-8)) BREAK;
+
+                T fx = eval(x);
+                T gtd = dot(g, d);
+                T alpha = 1;
+                Point xn = {x[0] + alpha*d[0], x[1] + alpha*d[1]};
+                WHILE(0, [&](int){
+                    return alpha > static_cast<T>(1e-12)
+                        && eval(xn) > fx + static_cast<T>(1e-4)*alpha*gtd;
+                }, {
+                    alpha *= 0.5;
+                    xn = {x[0] + alpha*d[0], x[1] + alpha*d[1]};
+                });
+
+                Point gn   = grad_at(xn);
+                Point diff = {gn[0]-g[0], gn[1]-g[1]};
+                T beta = dot(gn, diff) / dot(g, g);
+                if (beta < 0) beta = 0;
+
+                d = {-gn[0] + beta*d[0], -gn[1] + beta*d[1]};
+                x = xn; g = gn;
+                LOG_METHOD(eval(x));
+            });
+            return eval(x);
         );
     }
     REGISTER_FUNCTION
